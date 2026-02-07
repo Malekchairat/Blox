@@ -1,0 +1,316 @@
+import { useAuth } from "@/_core/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AccessibilityMenu } from "@/components/AccessibilityMenu";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useTheme } from "@/contexts/ThemeContext";
+import { trpc } from "@/lib/trpc";
+import { Heart, ArrowLeft, Moon, Sun, X } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { useState } from "react";
+import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
+
+export default function CreateCase() {
+  const { t } = useTranslation();
+  const { user, isAuthenticated, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const [, setLocation] = useLocation();
+  
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    category: "",
+    coverImage: "",
+    cha9a9aLink: "",
+    targetAmount: "",
+    isUrgent: false,
+  });
+
+  const createCaseMutation = trpc.cases.create.useMutation({
+    onSuccess: () => {
+      toast.success(t("createCase.success"));
+      setLocation("/");
+    },
+    onError: (error) => {
+      toast.error(`${t("auth.errorConnection")}: ${error.message}`);
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.title || !formData.description || !formData.category || !formData.cha9a9aLink || !formData.targetAmount) {
+      toast.error(t("createCase.fillRequired"));
+      return;
+    }
+
+    try {
+      await createCaseMutation.mutateAsync({
+        title: formData.title,
+        description: formData.description,
+        category: formData.category as any,
+        coverImage: formData.coverImage || undefined,
+        cha9a9aLink: formData.cha9a9aLink,
+        targetAmount: parseInt(formData.targetAmount),
+        isUrgent: formData.isUrgent,
+      });
+    } catch (error) {
+      console.error("Error creating case:", error);
+    }
+  };
+
+  // Redirect if not association or admin
+  if (isAuthenticated && user && user.role !== "association" && user.role !== "admin") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <Heart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-foreground mb-2">{t("common.accessDenied")}</h2>
+          <p className="text-muted-foreground mb-6">
+            {t("createCase.onlyAssociations")}
+          </p>
+          <Button asChild>
+            <Link href="/">{t("common.backToHome")}</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <Heart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-foreground mb-2">{t("common.loginRequired")}</h2>
+          <p className="text-muted-foreground mb-6">
+            {t("createCase.mustBeAssociation")}
+          </p>
+          <Button asChild>
+            <Link href="/login">{t("auth.loginButton")}</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const categoryKeys = ["health", "disability", "children", "education", "renovation", "emergency"] as const;
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Header */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/">
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+            </Button>
+            <div className="flex items-center gap-2">
+              <Heart className="h-6 w-6 text-primary" fill="currentColor" />
+              <h1 className="text-xl font-bold text-foreground">
+                {t("createCase.pageTitle")}
+              </h1>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <AccessibilityMenu />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleTheme}
+              aria-label={t("common.toggleTheme")}
+            >
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
+            
+            <span className="text-sm text-muted-foreground hidden sm:inline">
+              {user?.name}
+            </span>
+            <Button variant="outline" onClick={logout}>
+              {t("common.logout")}
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 py-8">
+        <div className="container max-w-3xl">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("createCase.formTitle")}</CardTitle>
+              <CardDescription>
+                {t("createCase.formSubtitle")}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Title */}
+                <div className="space-y-2">
+                  <Label htmlFor="title">
+                    {t("createCase.title")} <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="title"
+                    placeholder={t("createCase.titlePlaceholder")}
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    required
+                  />
+                </div>
+
+                {/* Description */}
+                <div className="space-y-2">
+                  <Label htmlFor="description">
+                    {t("createCase.description")} <span className="text-destructive">*</span>
+                  </Label>
+                  <Textarea
+                    id="description"
+                    placeholder={t("createCase.descriptionPlaceholder")}
+                    rows={8}
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t("createCase.descriptionHelp")}
+                  </p>
+                </div>
+
+                {/* Category */}
+                <div className="space-y-2">
+                  <Label htmlFor="category">
+                    {t("createCase.category")} <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => setFormData({ ...formData, category: value })}
+                    required
+                  >
+                    <SelectTrigger id="category">
+                      <SelectValue placeholder={t("createCase.selectCategory")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categoryKeys.map((key) => (
+                        <SelectItem key={key} value={key}>{t(`categories.${key}`)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Cha9a9a Link */}
+                <div className="space-y-2">
+                  <Label htmlFor="cha9a9aLink">
+                    {t("createCase.cha9a9aLink")} <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="cha9a9aLink"
+                    type="url"
+                    placeholder="https://cha9a9a.tn/donate/..."
+                    value={formData.cha9a9aLink}
+                    onChange={(e) => setFormData({ ...formData, cha9a9aLink: e.target.value })}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t("createCase.cha9a9aLinkHelp")}
+                  </p>
+                </div>
+
+                {/* Target Amount */}
+                <div className="space-y-2">
+                  <Label htmlFor="targetAmount">
+                    {t("createCase.targetAmount")} <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="targetAmount"
+                    type="number"
+                    min="0"
+                    placeholder={t("createCase.targetAmountPlaceholder")}
+                    value={formData.targetAmount}
+                    onChange={(e) => setFormData({ ...formData, targetAmount: e.target.value })}
+                    required
+                  />
+                </div>
+
+                {/* Photos Upload */}
+                <div className="space-y-2">
+                  <Label htmlFor="coverImage">{t("createCase.coverImage")}</Label>
+                  <Input
+                    id="coverImage"
+                    type="url"
+                    placeholder={t("createCase.coverImagePlaceholder")}
+                    value={formData.coverImage}
+                    onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t("createCase.coverImageHelp")}
+                  </p>
+                  {formData.coverImage && (
+                    <div className="relative mt-2 inline-block">
+                      <img
+                        src={formData.coverImage}
+                        alt={t("createCase.preview")}
+                        className="w-full max-w-xs h-40 object-cover rounded-lg border"
+                        onError={(e) => (e.currentTarget.style.display = "none")}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Is Urgent */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isUrgent"
+                    checked={formData.isUrgent}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, isUrgent: checked as boolean })
+                    }
+                  />
+                  <Label
+                    htmlFor="isUrgent"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {t("createCase.markUrgent")}
+                  </Label>
+                </div>
+
+                {/* Submit Button */}
+                <div className="flex gap-4 pt-4">
+                  <Button type="submit" disabled={createCaseMutation.isPending} className="flex-1">
+                    {createCaseMutation.isPending ? t("createCase.publishing") : t("createCase.publish")}
+                  </Button>
+                  <Button type="button" variant="outline" asChild>
+                    <Link href="/">{t("common.cancel")}</Link>
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t py-8 bg-card">
+        <div className="container text-center">
+          <p className="text-sm text-muted-foreground">
+            {t("common.footer")}
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+}
