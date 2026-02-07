@@ -1,5 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +20,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, UserCircle, Users } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -204,11 +204,19 @@ function DashboardLayoutContent({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-accent/50 transition-colors w-full text-left group-data-[collapsible=icon]:justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                  <Avatar className="h-9 w-9 border shrink-0">
-                    <AvatarFallback className="text-xs font-medium">
-                      {user?.name?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative shrink-0">
+                    <Avatar className="h-9 w-9 border">
+                      {user?.avatar && <AvatarImage src={user.avatar} alt={user.name || ""} />}
+                      <AvatarFallback className="text-xs font-medium">
+                        {user?.name?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    {(user as any)?.streakCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 flex items-center gap-px bg-background rounded-full px-1 py-0.5 text-[10px] font-bold leading-none shadow border" style={{ color: '#ef4444' }}>
+                        🔥{(user as any).streakCount}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
                     <p className="text-sm font-medium truncate leading-none">
                       {user?.name || "-"}
@@ -220,6 +228,13 @@ function DashboardLayoutContent({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  onClick={() => setLocation("/profile")}
+                  className="cursor-pointer"
+                >
+                  <UserCircle className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={logout}
                   className="cursor-pointer text-destructive focus:text-destructive"

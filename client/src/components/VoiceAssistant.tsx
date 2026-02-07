@@ -2,13 +2,16 @@ import { useVoiceAssistant } from "@/hooks/useVoiceAssistant";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, X, HelpCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 /**
  * Floating voice assistant for accessibility.
  * Allows users with hand injuries or other disabilities to
  * navigate the site and perform actions using voice commands.
+ *
+ * Triple-F shortcut: press the "f" key 3 times quickly (within 800ms)
+ * to toggle the voice assistant — designed for blind users.
  */
 export function VoiceAssistant() {
   const { t } = useTranslation();
@@ -23,6 +26,46 @@ export function VoiceAssistant() {
 
   const [showHelp, setShowHelp] = useState(false);
   const { i18n } = useTranslation();
+
+  // ── Triple-F shortcut (accessibility for blind users) ───────
+  const fPressTimestamps = useRef<number[]>([]);
+
+  const handleTripleF = useCallback(() => {
+    toggleListening();
+  }, [toggleListening]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input/textarea/contenteditable
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable) {
+        return;
+      }
+
+      if (e.key.toLowerCase() !== "f") {
+        // Reset on any other key
+        fPressTimestamps.current = [];
+        return;
+      }
+
+      const now = Date.now();
+      fPressTimestamps.current.push(now);
+
+      // Keep only presses within the last 800ms
+      fPressTimestamps.current = fPressTimestamps.current.filter(
+        (ts) => now - ts < 800
+      );
+
+      if (fPressTimestamps.current.length >= 3) {
+        fPressTimestamps.current = [];
+        e.preventDefault();
+        handleTripleF();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [handleTripleF]);
 
   if (!supported) return null;
 

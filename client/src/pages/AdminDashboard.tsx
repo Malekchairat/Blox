@@ -2,14 +2,16 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AccessibilityMenu } from "@/components/AccessibilityMenu";
+import { HearingAccessibilityPanel } from "@/components/HearingAccessibilityPanel";
 import { NeurodivergentPanel } from "@/components/NeurodivergentPanel";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTheme } from "@/contexts/ThemeContext";
 import { trpc } from "@/lib/trpc";
 import {
   Heart, Moon, Sun, Users, BarChart3, CheckCircle, XCircle,
-  AlertCircle, ArrowLeft, Shield,
+  AlertCircle, ArrowLeft, Shield, UserCircle, Star, Pencil,
 } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
@@ -21,7 +23,7 @@ export default function AdminDashboard() {
   const { user, logout } = useAuth({ redirectOnUnauthenticated: true });
   const { theme, toggleTheme } = useTheme();
 
-  const { data: allCases, isLoading: casesLoading } = trpc.cases.list.useQuery({});
+  const { data: allCases, isLoading: casesLoading } = trpc.cases.list.useQuery({ includeAll: true });
   const { data: allUsers } = trpc.admin.listUsers.useQuery(undefined, {
     retry: false,
   });
@@ -97,10 +99,21 @@ export default function AdminDashboard() {
             <LanguageSwitcher />
             <NeurodivergentPanel />
             <AccessibilityMenu />
+            <HearingAccessibilityPanel />
             <Button variant="outline" size="icon" onClick={toggleTheme} aria-label={t("common.toggleTheme")}>
               {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
-            <span className="text-sm text-muted-foreground hidden sm:inline">{user?.name}</span>
+            <Button asChild variant="outline">
+              <Link href="/profile" className="flex items-center gap-2">
+                <Avatar className="h-6 w-6">
+                  {user?.avatar && <AvatarImage src={user.avatar} alt={user.name || ""} />}
+                  <AvatarFallback className="text-[10px] font-medium">
+                    {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                {user?.name || t("profile.title")}
+              </Link>
+            </Button>
             <Button variant="outline" onClick={logout}>{t("common.logout")}</Button>
           </div>
         </div>
@@ -193,6 +206,16 @@ export default function AdminDashboard() {
                         <Button
                           size="sm"
                           variant="outline"
+                          asChild
+                        >
+                          <Link href={`/edit-case/${c.id}`}>
+                            <Pencil className="h-4 w-4 mr-1" />
+                            {t("editCase.editButton")}
+                          </Link>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
                           className="text-green-600 border-green-600 hover:bg-green-50 dark:hover:bg-green-950"
                           onClick={() => handleStatusChange(c.id, "approved")}
                           disabled={updateStatusMutation.isPending}
@@ -271,6 +294,26 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Influencer / Sponsor Management */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Star className="h-5 w-5 text-yellow-500" />
+                {t("influencer.management", "Gestion des Influenceurs / Sponsors")}
+              </CardTitle>
+              <CardDescription>
+                {t("influencer.managementDesc", "Gérez les influenceurs et sponsors solidaires liés aux cas")}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild>
+                <Link href="/dashboard/admin/influencers">
+                  {t("influencer.manageInfluencers", "Gérer les influenceurs")}
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         </div>

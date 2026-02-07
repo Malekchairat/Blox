@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Heart, Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Heart, Loader2, Eye, EyeOff, AlertCircle, ScanFace } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useTranslation } from "react-i18next";
@@ -11,6 +11,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { VoiceInputButton } from "@/components/VoiceInputButton";
 import { GoogleAuthButton } from "@/components/GoogleAuthButton";
 import { validateEmail } from "@/lib/validation";
+import { FaceCamera } from "@/components/FaceCamera";
 
 export default function Login() {
   const { t } = useTranslation();
@@ -22,11 +23,13 @@ export default function Login() {
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [faceIdLoading, setFaceIdLoading] = useState(false);
+  const [faceCameraOpen, setFaceCameraOpen] = useState(false);
 
   const redirectToDashboard = (role: string) => {
     const path = role === "admin" ? "/dashboard/admin"
       : role === "association" ? "/dashboard/association"
-      : "/dashboard/donor";
+      : "/";
     navigate(path);
   };
 
@@ -81,6 +84,30 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  const handleFaceLogin = useCallback(async (descriptor: number[]) => {
+    setFaceCameraOpen(false);
+    setError("");
+    setFaceIdLoading(true);
+    try {
+      const res = await fetch("/api/auth/face/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ descriptor }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Visage non reconnu.");
+        return;
+      }
+      await utils.auth.me.invalidate();
+      redirectToDashboard(data.user?.role);
+    } catch {
+      setError("Erreur lors de l'authentification faciale.");
+    } finally {
+      setFaceIdLoading(false);
+    }
+  }, [utils, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/5 to-background p-4">
@@ -185,11 +212,19 @@ export default function Login() {
                     <AlertCircle className="h-3 w-3" /> {fieldErrors.password}
                   </p>
                 )}
+                <div className="flex justify-end">
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Mot de passe oublié ?
+                  </Link>
+                </div>
               </div>
             </CardContent>
 
             <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full" disabled={loading || faceIdLoading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -200,7 +235,41 @@ export default function Login() {
                 )}
               </Button>
 
-              <GoogleAuthButton mode="login" disabled={loading} />
+              <div className="relative w-full">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">Connexion rapide</span>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full gap-2 border-primary/30 hover:bg-primary/5 hover:border-primary/50 transition-all"
+                disabled={loading || faceIdLoading}
+                onClick={() => setFaceCameraOpen(true)}
+              >
+                {faceIdLoading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <ScanFace className="h-5 w-5 text-primary" />
+                )}
+                <span className="font-medium">
+                  {faceIdLoading ? "Vérification..." : "Connexion par reconnaissance faciale"}
+                </span>
+              </Button>
+
+              <FaceCamera
+                open={faceCameraOpen}
+                onClose={() => setFaceCameraOpen(false)}
+                onCapture={handleFaceLogin}
+                title="Connexion faciale"
+                description="Regardez la caméra pour vous connecter"
+              />
+
+              <GoogleAuthButton mode="login" disabled={loading || faceIdLoading} />
 
               <p className="text-sm text-muted-foreground text-center">
                 {t("auth.noAccount")}{" "}

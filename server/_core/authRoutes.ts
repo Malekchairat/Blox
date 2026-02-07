@@ -1,10 +1,12 @@
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import type { Express, Request, Response } from "express";
 import { nanoid } from "nanoid";
+import crypto from "crypto";
 import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { hashPassword, verifyPassword, createSessionToken } from "./auth";
 import { ENV } from "./env";
+import { sendEmail, passwordResetEmail } from "./email";
 
 // ── Validation helpers ──────────────────────────────────────────────
 
@@ -41,7 +43,7 @@ export function registerAuthRoutes(app: Express) {
   /** POST /api/auth/register */
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
-      const { name, email, password, role } = req.body;
+      const { name, email, password, role, avatar } = req.body;
 
       // Validate name
       const nameError = validateName(name);
@@ -86,6 +88,7 @@ export function registerAuthRoutes(app: Express) {
         loginMethod: "email",
         passwordHash,
         role: userRole,
+        avatar: avatar || null,
         lastSignedIn: new Date(),
       });
 
@@ -149,11 +152,12 @@ export function registerAuthRoutes(app: Express) {
         return;
       }
 
-      // Update last signed in
+      // Update last signed in & streak
       await db.upsertUser({
         openId: user.openId,
         lastSignedIn: new Date(),
       });
+      await db.updateLoginStreak(user.id);
 
       const sessionToken = await createSessionToken({
         userId: user.id,
@@ -175,6 +179,83 @@ export function registerAuthRoutes(app: Express) {
       });
     } catch (error) {
       console.error("[Auth] Login failed:", error);
+      res.status(500).json({ error: "Erreur interne du serveur" });
+    }
+  });
+
+  /** POST /api/auth/forgot-password – Send password reset email */
+  app.post("/api/auth/forgot-password", async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+      if (!email || typeof email !== "string") {
+        res.status(400).json({ error: "Email est requis" });
+        return;
+      }
+
+      const normalizedEmail = email.trim().toLowerCase();
+      const user = await db.getUserByEmail(normalizedEmail);
+
+      // Always return success to prevent email enumeration
+      if (!user || !user.passwordHash) {
+        res.json({ success: true, message: "Si cet email existe, un lien de réinitialisation a été envoyé." });
+        return;
+      }
+
+      // Generate a secure token
+      const token = crypto.randomBytes(48).toString("hex");
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      await db.createPasswordResetToken(user.id, token, expiresAt);
+
+      // Build the reset link
+      const baseUrl = `http://localhost:${process.env.PORT || 3000}`;
+      const resetLink = `${baseUrl}/reset-password?token=${token}`;
+
+      // Send the email
+      const { subject, html } = passwordResetEmail({
+        userName: user.name || "Utilisateur",
+        resetLink,
+      });
+      await sendEmail({ to: normalizedEmail, subject, html });
+
+      res.json({ success: true, message: "Si cet email existe, un lien de réinitialisation a été envoyé." });
+    } catch (error) {
+      console.error("[Auth] Forgot password failed:", error);
+      res.status(500).json({ error: "Erreur interne du serveur" });
+    }
+  });
+
+  /** POST /api/auth/reset-password – Reset password with token */
+  app.post("/api/auth/reset-password", async (req: Request, res: Response) => {
+    try {
+      const { token, password } = req.body;
+
+      if (!token || typeof token !== "string") {
+        res.status(400).json({ error: "Token invalide" });
+        return;
+      }
+
+      const passwordError = validatePassword(password);
+      if (passwordError) {
+        res.status(400).json({ error: passwordError, field: "password" });
+        return;
+      }
+
+      // Validate the token
+      const resetToken = await db.getPasswordResetToken(token);
+      if (!resetToken) {
+        res.status(400).json({ error: "Ce lien est invalide ou a expiré. Veuillez refaire une demande." });
+        return;
+      }
+
+      // Hash and update the password
+      const newPasswordHash = await hashPassword(password);
+      await db.updateUserPassword(resetToken.userId, newPasswordHash);
+      await db.markResetTokenUsed(resetToken.id);
+
+      res.json({ success: true, message: "Mot de passe réinitialisé avec succès." });
+    } catch (error) {
+      console.error("[Auth] Reset password failed:", error);
       res.status(500).json({ error: "Erreur interne du serveur" });
     }
   });
@@ -325,6 +406,9 @@ export function registerAuthRoutes(app: Express) {
         });
       }
 
+      // Update streak for all login types
+      await db.updateLoginStreak(user.id);
+
       // Create session token and set cookie
       const sessionToken = await createSessionToken({
         userId: user.id,
@@ -338,10 +422,10 @@ export function registerAuthRoutes(app: Express) {
       // Redirect to the appropriate dashboard
       const dashboardPath =
         user.role === "admin"
-          ? "/admin"
+          ? "/dashboard/admin"
           : user.role === "association"
-          ? "/association"
-          : "/donor";
+          ? "/dashboard/association"
+          : "/";
 
       res.redirect(dashboardPath);
     } catch (error) {

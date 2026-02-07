@@ -20,7 +20,10 @@ import {
   Keyboard,
   RotateCcw,
   Check,
+  Hand,
+  Ear,
 } from "lucide-react";
+import { useHearingAccessibility } from "@/contexts/HearingAccessibilityContext";
 import { useTranslation } from "react-i18next";
 
 export function AccessibilityMenu() {
@@ -32,8 +35,10 @@ export function AccessibilityMenu() {
     updateColorScheme,
     toggleScreenReaderMode,
     toggleKeyboardNavigation,
+    toggleMotorMode,
     resetSettings,
   } = useAccessibility();
+  const { settings: hearingSettings, toggleHearingMode } = useHearingAccessibility();
 
   const fontSizeOptions = [
     { value: "normal" as const, labelKey: "accessibility.fontNormal" },
@@ -148,6 +153,30 @@ export function AccessibilityMenu() {
             {t("accessibility.keyboardNav")}
           </span>
           {settings.keyboardNavigation && <Check className="h-4 w-4" />}
+        </DropdownMenuItem>
+
+        {/* Motor / Physical disability mode */}
+        <DropdownMenuItem
+          onClick={toggleMotorMode}
+          className="flex items-center justify-between"
+        >
+          <span className="flex items-center">
+            <Hand className="h-4 w-4 mr-2" />
+            {t("accessibility.motorMode")}
+          </span>
+          {settings.motorMode && <Check className="h-4 w-4" />}
+        </DropdownMenuItem>
+
+        {/* Hearing accessibility mode */}
+        <DropdownMenuItem
+          onClick={toggleHearingMode}
+          className="flex items-center justify-between"
+        >
+          <span className="flex items-center">
+            <Ear className="h-4 w-4 mr-2" />
+            {t("accessibility.hearingMode")}
+          </span>
+          {hearingSettings.hearingMode && <Check className="h-4 w-4" />}
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />

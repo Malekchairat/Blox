@@ -4,7 +4,10 @@ import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerAuthRoutes } from "./authRoutes";
+import { registerWebauthnRoutes } from "./webauthnRoutes";
+import { registerFaceAuthRoutes } from "./faceAuthRoutes";
 import { registerChatRoutes } from "./chatRoutes";
+import { registerUploadRoutes } from "./uploadRoutes";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -36,8 +39,14 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // Auth routes (login, register)
   registerAuthRoutes(app);
+  // WebAuthn routes (Face ID / biometric login)
+  registerWebauthnRoutes(app);
+  // Face recognition routes (camera-based)
+  registerFaceAuthRoutes(app);
   // Chat routes (AI chatbot)
   registerChatRoutes(app);
+  // Upload routes (image uploads)
+  registerUploadRoutes(app);
   // tRPC API
   app.use(
     "/api/trpc",

@@ -2,25 +2,36 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AccessibilityMenu } from "@/components/AccessibilityMenu";
+import { HearingAccessibilityPanel } from "@/components/HearingAccessibilityPanel";
 import { NeurodivergentPanel } from "@/components/NeurodivergentPanel";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTheme } from "@/contexts/ThemeContext";
 import { trpc } from "@/lib/trpc";
-import { Heart, Search, AlertCircle, Moon, Sun, Users, TrendingUp, Plus, LayoutDashboard } from "lucide-react";
-import { useState } from "react";
-import { Link } from "wouter";
+import { Heart, Search, AlertCircle, Moon, Sun, Users, TrendingUp, Plus, LayoutDashboard, UserCircle, Rss, Compass, Bookmark, Video } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { TranslatedText } from "@/components/TranslatedText";
+import { SaveButton } from "@/components/SaveButton";
 
 export default function Home() {
   const { t } = useTranslation();
   const { user, loading, isAuthenticated, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  // Redirect associations directly to their dashboard
+  useEffect(() => {
+    if (!loading && isAuthenticated && user?.role === "association") {
+      navigate("/dashboard/association");
+    }
+  }, [loading, isAuthenticated, user?.role, navigate]);
 
   const { data: cases, isLoading: casesLoading } = trpc.cases.list.useQuery({
     category: selectedCategory === "all" ? undefined : selectedCategory,
@@ -66,6 +77,7 @@ export default function Home() {
             <LanguageSwitcher />
             <NeurodivergentPanel />
             <AccessibilityMenu />
+            <HearingAccessibilityPanel />
             <Button
               variant="outline"
               size="icon"
@@ -81,6 +93,33 @@ export default function Home() {
             
             {isAuthenticated ? (
               <>
+                <Button asChild variant="ghost" size="icon" title={t("social.feed")}>
+                  <Link href="/feed">
+                    <Rss className="h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button asChild variant="ghost" size="icon" title={t("social.discover")}>
+                  <Link href="/discover">
+                    <Compass className="h-5 w-5" />
+                  </Link>
+                </Button>
+                {user?.role === "donor" && (
+                  <Button asChild variant="ghost" size="icon" title={t("savedCases.title")}>
+                    <Link href="/saved-cases">
+                      <Bookmark className="h-5 w-5" />
+                    </Link>
+                  </Button>
+                )}
+                <Button asChild variant="ghost" size="icon" title="Memberships">
+                  <Link href="/memberships">
+                    <Users className="h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button asChild variant="ghost" size="icon" title="Meetings">
+                  <Link href="/meetings">
+                    <Video className="h-5 w-5" />
+                  </Link>
+                </Button>
                 {(user?.role === "association" || user?.role === "admin") && (
                   <Button asChild variant="default">
                     <Link href="/create-case">
@@ -95,17 +134,32 @@ export default function Home() {
                     {t("common.dashboard")}
                   </Link>
                 </Button>
-                <span className="text-sm text-muted-foreground hidden sm:inline">
-                  {user?.name}
-                </span>
+                <Button asChild variant="outline">
+                  <Link href="/profile" className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      {user?.avatar && <AvatarImage src={user.avatar} alt={user.name || ""} />}
+                      <AvatarFallback className="text-[10px] font-medium">
+                        {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    {user?.name || t("profile.title")}
+                  </Link>
+                </Button>
                 <Button variant="outline" onClick={logout}>
                   {t("common.logout")}
                 </Button>
               </>
             ) : (
-              <Button asChild>
-                <Link href="/login">{t("common.login")}</Link>
-              </Button>
+              <>
+                <Button asChild variant="ghost" size="icon" title={t("social.discover")}>
+                  <Link href="/discover">
+                    <Compass className="h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/login">{t("common.login")}</Link>
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -219,6 +273,11 @@ export default function Home() {
                       )}
                     </div>
                     <CardTitle className="line-clamp-2"><TranslatedText text={caseItem.title} /></CardTitle>
+                    {caseItem.associationName && (
+                      <p className="text-xs text-primary font-medium mt-1">
+                        {t("caseDetail.by", "Par")} {caseItem.associationName}
+                      </p>
+                    )}
                     <CardDescription className="line-clamp-3">
                       <TranslatedText text={caseItem.description} />
                     </CardDescription>
@@ -258,6 +317,9 @@ export default function Home() {
                     <Button asChild className="flex-1">
                       <Link href={`/case/${caseItem.id}`}>{t("home.viewDetails")}</Link>
                     </Button>
+                    {isAuthenticated && user?.role === "donor" && (
+                      <SaveButton caseId={caseItem.id} />
+                    )}
                   </CardFooter>
                 </Card>
               ))}

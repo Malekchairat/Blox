@@ -9,6 +9,7 @@ interface AccessibilitySettings {
   colorScheme: ColorScheme;
   screenReaderMode: boolean;
   keyboardNavigation: boolean;
+  motorMode: boolean;
   lineHeight: number;
   letterSpacing: number;
 }
@@ -20,6 +21,7 @@ interface AccessibilityContextType {
   updateColorScheme: (scheme: ColorScheme) => void;
   toggleScreenReaderMode: () => void;
   toggleKeyboardNavigation: () => void;
+  toggleMotorMode: () => void;
   updateLineHeight: (height: number) => void;
   updateLetterSpacing: (spacing: number) => void;
   resetSettings: () => void;
@@ -31,6 +33,7 @@ const defaultSettings: AccessibilitySettings = {
   colorScheme: "default",
   screenReaderMode: false,
   keyboardNavigation: true,
+  motorMode: false,
   lineHeight: 1.6,
   letterSpacing: 0,
 };
@@ -75,6 +78,13 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
       root.classList.remove("keyboard-navigation");
     }
 
+    // Apply motor accessibility mode
+    if (settings.motorMode) {
+      root.classList.add("motor-mode");
+    } else {
+      root.classList.remove("motor-mode");
+    }
+
     // Apply line height and letter spacing
     root.style.setProperty("--line-height", settings.lineHeight.toString());
     root.style.setProperty("--letter-spacing", `${settings.letterSpacing}px`);
@@ -100,6 +110,15 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     setSettings((prev) => ({ ...prev, keyboardNavigation: !prev.keyboardNavigation }));
   };
 
+  const toggleMotorMode = () => {
+    setSettings((prev) => ({
+      ...prev,
+      motorMode: !prev.motorMode,
+      // Auto-enable keyboard nav when motor mode is on
+      keyboardNavigation: !prev.motorMode ? true : prev.keyboardNavigation,
+    }));
+  };
+
   const updateLineHeight = (height: number) => {
     setSettings((prev) => ({ ...prev, lineHeight: height }));
   };
@@ -121,6 +140,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         updateColorScheme,
         toggleScreenReaderMode,
         toggleKeyboardNavigation,
+        toggleMotorMode,
         updateLineHeight,
         updateLetterSpacing,
         resetSettings,

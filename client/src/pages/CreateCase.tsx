@@ -1,5 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AccessibilityMenu } from "@/components/AccessibilityMenu";
+import { HearingAccessibilityPanel } from "@/components/HearingAccessibilityPanel";
 import { NeurodivergentPanel } from "@/components/NeurodivergentPanel";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -32,8 +34,16 @@ export default function CreateCase() {
     cha9a9aLink: "",
     targetAmount: "",
     isUrgent: false,
+    associationId: "", // only used by admin
   });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Load associations list for admin
+  const { data: allUsers } = trpc.admin.listUsers.useQuery(undefined, {
+    enabled: isAuthenticated && user?.role === "admin",
+    retry: false,
+  });
+  const associations = allUsers?.filter((u: any) => u.role === "association") ?? [];
 
   const clearFieldError = (field: string) => {
     setFieldErrors((p) => ({ ...p, [field]: "" }));
@@ -67,6 +77,11 @@ export default function CreateCase() {
     const amountErr = validateAmount(formData.targetAmount);
     if (amountErr) errors.targetAmount = t(`validation.field.${amountErr}`);
 
+    // Admin must select an association
+    if (user?.role === "admin" && !formData.associationId) {
+      errors.associationId = t("createCase.selectAssociationRequired", "Veuillez sélectionner une association");
+    }
+
     if (formData.coverImage) {
       const imgErr = validateUrl(formData.coverImage);
       if (imgErr) errors.coverImage = t(`validation.field.${imgErr}`);
@@ -87,6 +102,7 @@ export default function CreateCase() {
         cha9a9aLink: formData.cha9a9aLink,
         targetAmount: parseInt(formData.targetAmount),
         isUrgent: formData.isUrgent,
+        ...(user?.role === "admin" && formData.associationId ? { associationId: parseInt(formData.associationId) } : {}),
       });
     } catch (error) {
       console.error("Error creating case:", error);
@@ -153,6 +169,7 @@ export default function CreateCase() {
             <LanguageSwitcher />
             <NeurodivergentPanel />
             <AccessibilityMenu />
+            <HearingAccessibilityPanel />
             <Button
               variant="outline"
               size="icon"
@@ -166,9 +183,14 @@ export default function CreateCase() {
               )}
             </Button>
             
-            <span className="text-sm text-muted-foreground hidden sm:inline">
-              {user?.name}
-            </span>
+            <Link href="/profile">
+              <Avatar className="h-7 w-7 cursor-pointer hover:ring-2 hover:ring-primary transition-all">
+                {user?.avatar && <AvatarImage src={user.avatar} alt={user.name || ""} />}
+                <AvatarFallback className="text-[10px] font-medium">
+                  {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
             <Button variant="outline" onClick={logout}>
               {t("common.logout")}
             </Button>
@@ -260,6 +282,38 @@ export default function CreateCase() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Association Picker (Admin only) */}
+                {user?.role === "admin" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="associationId">
+                      {t("createCase.association", "Association")} <span className="text-destructive">*</span>
+                    </Label>
+                    {fieldErrors.associationId && (
+                      <p className="text-xs text-destructive flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" /> {fieldErrors.associationId}
+                      </p>
+                    )}
+                    <Select
+                      value={formData.associationId}
+                      onValueChange={(value) => { setFormData({ ...formData, associationId: value }); clearFieldError("associationId"); }}
+                    >
+                      <SelectTrigger id="associationId">
+                        <SelectValue placeholder={t("createCase.selectAssociation", "Sélectionner une association")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {associations.map((assoc: any) => (
+                          <SelectItem key={assoc.id} value={String(assoc.id)}>
+                            {assoc.name || assoc.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {t("createCase.selectAssociationHelp", "Le cas sera créé au nom de cette association")}
+                    </p>
+                  </div>
+                )}
 
                 {/* Cha9a9a Link */}
                 <div className="space-y-2">

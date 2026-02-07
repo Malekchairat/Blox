@@ -15,10 +15,27 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
+import AdminInfluencers from "./pages/AdminInfluencers";
 import AssociationDashboard from "./pages/AssociationDashboard";
 import DonorDashboard from "./pages/DonorDashboard";
+import Profile from "./pages/Profile";
+import Feed from "./pages/Feed";
+import Discover from "./pages/Discover";
+import AssociationProfile from "./pages/AssociationProfile";
+import SavedCases from "./pages/SavedCases";
+import EditCase from "./pages/EditCase";
+import Memberships from "./pages/Memberships";
+import Meetings from "./pages/Meetings";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 import { NeurodivergentProvider } from "./contexts/NeurodivergentContext";
+import { HearingAccessibilityProvider } from "./contexts/HearingAccessibilityContext";
+import { VisualAlertOverlay } from "./components/VisualAlertOverlay";
+import { CaptionOverlay } from "./components/CaptionOverlay";
+import { HearingAccessibilityPanel } from "./components/HearingAccessibilityPanel";
+import { SignLanguageOverlay } from "./components/SignLanguageOverlay";
+import { KeyboardShortcuts } from "./components/KeyboardShortcuts";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -27,12 +44,23 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/case/:id" component={CaseDetail} />
       <Route path="/create-case" component={CreateCase} />
+      <Route path="/edit-case/:id" component={EditCase} />
       <Route path="/dashboard/admin" component={AdminDashboard} />
       <Route path="/dashboard/admin/users" component={AdminUsers} />
+      <Route path="/dashboard/admin/influencers" component={AdminInfluencers} />
       <Route path="/dashboard/association" component={AssociationDashboard} />
       <Route path="/dashboard/donor" component={DonorDashboard} />
+      <Route path="/profile" component={Profile} />
+      <Route path="/feed" component={Feed} />
+      <Route path="/discover" component={Discover} />
+      <Route path="/association/:id" component={AssociationProfile} />
+      <Route path="/saved-cases" component={SavedCases} />
+      <Route path="/memberships" component={Memberships} />
+      <Route path="/meetings" component={Meetings} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -50,6 +78,7 @@ function App() {
     <ErrorBoundary>
       <AccessibilityProvider>
         <NeurodivergentProvider>
+        <HearingAccessibilityProvider>
         <ThemeProvider
           defaultTheme="light"
           switchable
@@ -59,9 +88,14 @@ function App() {
             <ScreenReaderToolbar />
             <VoiceAssistant />
             <AIChatBot />
+            <KeyboardShortcuts />
+            <VisualAlertOverlay />
+            <CaptionOverlay />
+            <SignLanguageOverlay />
             <Router />
           </TooltipProvider>
         </ThemeProvider>
+        </HearingAccessibilityProvider>
         </NeurodivergentProvider>
       </AccessibilityProvider>
     </ErrorBoundary>

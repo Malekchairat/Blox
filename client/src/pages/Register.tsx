@@ -3,8 +3,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Heart, Loader2, Eye, EyeOff, AlertCircle, CheckCircle2 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Heart, Loader2, Eye, EyeOff, AlertCircle, CheckCircle2, Camera, ScanFace } from "lucide-react";
+import { useState, useMemo, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useTranslation } from "react-i18next";
@@ -12,11 +13,13 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { VoiceInputButton } from "@/components/VoiceInputButton";
 import { GoogleAuthButton } from "@/components/GoogleAuthButton";
 import { validateEmail, validatePassword, validateName, getPasswordStrength } from "@/lib/validation";
+import { FaceCamera } from "@/components/FaceCamera";
 
 export default function Register() {
   const { t } = useTranslation();
   const [, navigate] = useLocation();
   const utils = trpc.useUtils();
+  const updateProfileMutation = trpc.profile.update.useMutation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string>("donor");
@@ -26,6 +29,15 @@ export default function Register() {
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  // Face recognition post-registration state
+  const [showFaceIdSetup, setShowFaceIdSetup] = useState(false);
+  const [faceIdLoading, setFaceIdLoading] = useState(false);
+  const [registeredRole, setRegisteredRole] = useState<string>("donor");
+  const [faceCameraOpen, setFaceCameraOpen] = useState(false);
 
   const pwStrength = useMemo(() => getPasswordStrength(password), [password]);
 
@@ -41,7 +53,7 @@ export default function Register() {
   const redirectToDashboard = (roleVal: string) => {
     const path = roleVal === "admin" ? "/dashboard/admin"
       : roleVal === "association" ? "/dashboard/association"
-      : "/dashboard/donor";
+      : "/";
     navigate(path);
   };
 
@@ -88,13 +100,66 @@ export default function Register() {
         return;
       }
 
+      // Now the user is authenticated (cookie set). Upload avatar if selected.
+      if (avatarFile) {
+        try {
+          const formData = new FormData();
+          formData.append("image", avatarFile);
+          const uploadRes = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+            credentials: "same-origin",
+          });
+          if (uploadRes.ok) {
+            const uploadData = await uploadRes.json();
+            if (uploadData.url) {
+              await updateProfileMutation.mutateAsync({ avatar: uploadData.url });
+            }
+          }
+        } catch {
+          // Non-critical: user can set avatar later from profile page
+        }
+      }
+
       await utils.auth.me.invalidate();
-      redirectToDashboard(data.user?.role);
+
+      // Show the Face ID setup step after registration
+      setRegisteredRole(data.user?.role || role);
+      setShowFaceIdSetup(true);
+      setLoading(false);
+      return;
     } catch {
       setError(t("auth.errorServer"));
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSetupFaceId = async (descriptor: number[]) => {
+    setFaceCameraOpen(false);
+    setFaceIdLoading(true);
+    try {
+      await fetch("/api/auth/face/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ descriptor, label: "Mon visage" }),
+      });
+      // Whether success or failure, redirect to dashboard
+      redirectToDashboard(registeredRole);
+    } catch {
+      redirectToDashboard(registeredRole);
+    } finally {
+      setFaceIdLoading(false);
+    }
+  };
+
+  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return;
+    setAvatarFile(file);
+    const url = URL.createObjectURL(file);
+    setAvatarPreview(url);
   };
 
   const clearFieldError = (field: string) => {
@@ -121,6 +186,63 @@ export default function Register() {
         </div>
 
         <Card>
+          {showFaceIdSetup ? (
+            /* ── Face Recognition Setup Step ── */
+            <>
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                  <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
+                </div>
+                <CardTitle>Compte créé avec succès !</CardTitle>
+                <CardDescription>
+                  Configurez la reconnaissance faciale pour vous connecter instantanément la prochaine fois.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 p-6 text-center space-y-4">
+                  <ScanFace className="h-12 w-12 mx-auto text-primary" />
+                  <div>
+                    <p className="font-medium">Reconnaissance faciale</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Utilisez la caméra de votre PC pour un accès rapide et sécurisé.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex flex-col gap-3">
+                <Button
+                  className="w-full gap-2"
+                  onClick={() => setFaceCameraOpen(true)}
+                  disabled={faceIdLoading}
+                >
+                  {faceIdLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ScanFace className="h-4 w-4" />
+                  )}
+                  {faceIdLoading ? "Configuration..." : "Configurer la reconnaissance faciale"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full text-muted-foreground"
+                  onClick={() => redirectToDashboard(registeredRole)}
+                  disabled={faceIdLoading}
+                >
+                  Passer cette étape
+                </Button>
+
+                <FaceCamera
+                  open={faceCameraOpen}
+                  onClose={() => setFaceCameraOpen(false)}
+                  onCapture={handleSetupFaceId}
+                  title="Enregistrer votre visage"
+                  description="Regardez la caméra pour configurer la reconnaissance faciale"
+                />
+              </CardFooter>
+            </>
+          ) : (
+          /* ── Registration Form ── */
+          <>
           <CardHeader>
             <CardTitle>{t("auth.registerTitle")}</CardTitle>
             <CardDescription>
@@ -135,6 +257,33 @@ export default function Register() {
                   <span>{error}</span>
                 </div>
               )}
+
+              {/* Avatar */}
+              <div className="flex flex-col items-center gap-2">
+                <Label>{t("auth.profilePhoto")}</Label>
+                <div className="relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
+                  <Avatar className="h-20 w-20 border-2 border-dashed border-muted-foreground/30 hover:border-primary transition-colors">
+                    {avatarPreview && <AvatarImage src={avatarPreview} alt="Avatar preview" />}
+                    <AvatarFallback className="bg-muted text-muted-foreground">
+                      <Camera className="h-8 w-8" />
+                    </AvatarFallback>
+                  </Avatar>
+                  {avatarPreview && (
+                    <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Camera className="h-6 w-6 text-white" />
+                    </div>
+                  )}
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarSelect}
+                    disabled={loading}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">{t("auth.profilePhotoHint")}</p>
+              </div>
 
               {/* Name */}
               <div className="space-y-2">
@@ -338,6 +487,8 @@ export default function Register() {
               </p>
             </CardFooter>
           </form>
+          </>
+          )}
         </Card>
       </div>
     </div>

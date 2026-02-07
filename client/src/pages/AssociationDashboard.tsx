@@ -2,14 +2,16 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AccessibilityMenu } from "@/components/AccessibilityMenu";
+import { HearingAccessibilityPanel } from "@/components/HearingAccessibilityPanel";
 import { NeurodivergentPanel } from "@/components/NeurodivergentPanel";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTheme } from "@/contexts/ThemeContext";
 import { trpc } from "@/lib/trpc";
 import {
   Heart, Moon, Sun, Plus, ArrowLeft, Building2,
-  AlertCircle, Eye, BarChart3,
+  AlertCircle, Eye, BarChart3, UserCircle, Globe, Pencil, Video, Users,
 } from "lucide-react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -74,10 +76,27 @@ export default function AssociationDashboard() {
             <LanguageSwitcher />
             <NeurodivergentPanel />
             <AccessibilityMenu />
+            <HearingAccessibilityPanel />
             <Button variant="outline" size="icon" onClick={toggleTheme} aria-label={t("common.toggleTheme")}>
               {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
-            <span className="text-sm text-muted-foreground hidden sm:inline">{user?.name}</span>
+            <Button asChild variant="outline">
+              <Link href={`/association/${user?.id}`}>
+                <Globe className="h-4 w-4 mr-2" />
+                {t("social.myPage")}
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/profile" className="flex items-center gap-2">
+                <Avatar className="h-6 w-6">
+                  {user?.avatar && <AvatarImage src={user.avatar} alt={user.name || ""} />}
+                  <AvatarFallback className="text-[10px] font-medium">
+                    {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                {user?.name || t("profile.title")}
+              </Link>
+            </Button>
             <Button variant="outline" onClick={logout}>{t("common.logout")}</Button>
           </div>
         </div>
@@ -125,7 +144,19 @@ export default function AssociationDashboard() {
           </div>
 
           {/* Action Button */}
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button asChild variant="outline">
+              <Link href="/memberships">
+                <Users className="h-4 w-4 mr-2" />
+                Members
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/meetings">
+                <Video className="h-4 w-4 mr-2" />
+                Meetings
+              </Link>
+            </Button>
             <Button asChild>
               <Link href="/create-case">
                 <Plus className="h-4 w-4 mr-2" />
@@ -185,6 +216,12 @@ export default function AssociationDashboard() {
                         </div>
                         <Button variant="outline" size="sm" asChild className="shrink-0">
                           <Link href={`/case/${c.id}`}>{t("common.view")}</Link>
+                        </Button>
+                        <Button variant="outline" size="sm" asChild className="shrink-0">
+                          <Link href={`/edit-case/${c.id}`}>
+                            <Pencil className="h-4 w-4 mr-1" />
+                            {t("editCase.editButton")}
+                          </Link>
                         </Button>
                       </div>
                       {/* Progress bar */}
