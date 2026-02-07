@@ -135,6 +135,60 @@ export const appRouter = router({
         await db.updateCaseStatus(input.caseId, input.status);
         return { success: true };
       }),
+
+    getUserById: adminProcedure
+      .input(z.object({ userId: z.number() }))
+      .query(async ({ input }) => {
+        const user = await db.getUserById(input.userId);
+        if (!user) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+        }
+        return user;
+      }),
+
+    createUser: adminProcedure
+      .input(z.object({
+        name: z.string().min(1, "Name is required"),
+        email: z.string().email("Invalid email"),
+        role: z.enum(["donor", "association", "admin"]),
+        phone: z.string().optional(),
+        bio: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const existing = await db.getUserByEmail(input.email);
+        if (existing) {
+          throw new TRPCError({ code: "CONFLICT", message: "A user with this email already exists" });
+        }
+        return await db.adminCreateUser(input);
+      }),
+
+    updateUser: adminProcedure
+      .input(z.object({
+        userId: z.number(),
+        name: z.string().min(1).optional(),
+        email: z.string().email().optional(),
+        role: z.enum(["donor", "association", "admin"]).optional(),
+        phone: z.string().nullable().optional(),
+        bio: z.string().nullable().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { userId, ...data } = input;
+        if (data.email) {
+          const existing = await db.getUserByEmail(data.email);
+          if (existing && existing.id !== userId) {
+            throw new TRPCError({ code: "CONFLICT", message: "A user with this email already exists" });
+          }
+        }
+        await db.adminUpdateUser(userId, data);
+        return { success: true };
+      }),
+
+    deleteUser: adminProcedure
+      .input(z.object({ userId: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.adminDeleteUser(input.userId);
+        return { success: true };
+      }),
   }),
 
   // Favorites router

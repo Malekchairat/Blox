@@ -75,7 +75,7 @@
     "association": "Association",
     "donorHelp": "Vous pourrez soutenir des cas sociaux",
     "associationHelp": "Vous pourrez publier des cas sociaux",
-    "minChars": "Minimum 6 caractères",
+    "minChars": "Minimum 8 caractères",
     "registerButton": "Créer mon compte",
     "registering": "Création du compte...",
     "hasAccount": "Déjà un compte ?",
@@ -84,7 +84,8 @@
     "errorServer": "Erreur de connexion au serveur",
     "errorRegister": "Erreur lors de l'inscription",
     "passwordMismatch": "Les mots de passe ne correspondent pas",
-    "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères"
+    "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères",
+    "orContinueWith": "ou continuer avec"
   },
   "caseDetail": {
     "notFoundTitle": "Cas social introuvable",
@@ -248,5 +249,73 @@
     "cmdHealthCases": "Voir les cas santé",
     "cmdBiggerText": "Agrandir le texte",
     "cmdReadPage": "Activer la lecture vocale"
+  },
+  "validation": {
+    "email": {
+      "required": "L'email est requis",
+      "invalidFormat": "Format d'email invalide",
+      "tooLong": "L'email est trop long"
+    },
+    "password": {
+      "required": "Le mot de passe est requis",
+      "tooShort": "Le mot de passe doit contenir au moins 8 caractères",
+      "tooLong": "Le mot de passe est trop long",
+      "noUppercase": "Doit contenir au moins une majuscule",
+      "noLowercase": "Doit contenir au moins une minuscule",
+      "noDigit": "Doit contenir au moins un chiffre",
+      "noSpecial": "Doit contenir au moins un caractère spécial (!@#$%...)",
+      "min8Chars": "Au moins 8 caractères",
+      "hasUppercase": "Une lettre majuscule",
+      "hasLowercase": "Une lettre minuscule",
+      "hasDigit": "Un chiffre",
+      "hasSpecial": "Un caractère spécial (!@#$%...)",
+      "strength": {
+        "empty": "",
+        "veryWeak": "Très faible",
+        "weak": "Faible",
+        "fair": "Moyen",
+        "good": "Bon",
+        "strong": "Fort"
+      }
+    },
+    "name": {
+      "required": "Le nom est requis",
+      "tooShort": "Le nom doit contenir au moins 2 caractères",
+      "tooLong": "Le nom est trop long"
+    },
+    "field": {
+      "required": "Ce champ est requis",
+      "tooShort": "Ce champ est trop court",
+      "tooLong": "Ce champ est trop long",
+      "invalidUrl": "URL invalide (doit commencer par https://)",
+      "notANumber": "Veuillez entrer un nombre valide",
+      "tooSmall": "Le montant doit être supérieur à 0",
+      "tooLarge": "Le montant est trop élevé",
+      "descriptionTooShort": "La description doit contenir au moins 20 caractères"
+    }
+  },
+  "voiceInput": {
+    "startDictation": "Dicter par la voix",
+    "stopDictation": "Arrêter la dictée",
+    "hint": "Cliquez sur le micro pour dicter"
+  },
+  "chatbot": {
+    "title": "Assistant IA",
+    "subtitle": "Posez vos questions",
+    "open": "Ouvrir l'assistant",
+    "close": "Fermer l'assistant",
+    "inputPlaceholder": "Tapez ou parlez...",
+    "listeningPlaceholder": "Je vous écoute...",
+    "startListening": "Poser une question vocale",
+    "stopListening": "Arrêter l'écoute",
+    "muteTTS": "Désactiver la voix",
+    "enableTTS": "Activer la voix",
+    "welcomeMessage": "Bonjour ! Je suis votre assistant. Posez-moi des questions sur les dons, les cas sociaux ou la plateforme.",
+    "errorNetwork": "Désolé, je ne peux pas répondre pour le moment. Veuillez réessayer.",
+    "errorGeneric": "Une erreur est survenue.",
+    "suggestDonate": "Comment faire un don ?",
+    "suggestCreate": "Créer un cas social",
+    "suggestAccessibility": "Accessibilité",
+    "suggestCategories": "Quelles catégories ?"
   }
 }

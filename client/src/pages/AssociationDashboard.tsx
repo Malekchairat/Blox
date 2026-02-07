@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AccessibilityMenu } from "@/components/AccessibilityMenu";
+import { NeurodivergentPanel } from "@/components/NeurodivergentPanel";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTheme } from "@/contexts/ThemeContext";
 import { trpc } from "@/lib/trpc";
@@ -71,6 +72,7 @@ export default function AssociationDashboard() {
           </div>
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
+            <NeurodivergentPanel />
             <AccessibilityMenu />
             <Button variant="outline" size="icon" onClick={toggleTheme} aria-label={t("common.toggleTheme")}>
               {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}

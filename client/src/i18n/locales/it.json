@@ -75,7 +75,7 @@
     "association": "Associazione",
     "donorHelp": "Potrai sostenere i casi sociali",
     "associationHelp": "Potrai pubblicare i casi sociali",
-    "minChars": "Minimo 6 caratteri",
+    "minChars": "Minimo 8 caratteri",
     "registerButton": "Crea il mio account",
     "registering": "Creazione account...",
     "hasAccount": "Hai già un account?",
@@ -84,7 +84,8 @@
     "errorServer": "Errore di connessione al server",
     "errorRegister": "Errore durante la registrazione",
     "passwordMismatch": "Le password non corrispondono",
-    "passwordTooShort": "La password deve contenere almeno 6 caratteri"
+    "passwordTooShort": "La password deve contenere almeno 8 caratteri",
+    "orContinueWith": "o continua con"
   },
   "caseDetail": {
     "notFoundTitle": "Caso sociale non trovato",
@@ -246,5 +247,73 @@
     "cmdHealthCases": "Visualizza casi sanitari",
     "cmdBiggerText": "Aumenta dimensione testo",
     "cmdReadPage": "Attiva lettore di schermo"
+  },
+  "validation": {
+    "email": {
+      "required": "L'email è obbligatoria",
+      "invalidFormat": "Formato email non valido",
+      "tooLong": "L'email è troppo lunga"
+    },
+    "password": {
+      "required": "La password è obbligatoria",
+      "tooShort": "La password deve contenere almeno 8 caratteri",
+      "tooLong": "La password è troppo lunga",
+      "noUppercase": "Deve contenere almeno una lettera maiuscola",
+      "noLowercase": "Deve contenere almeno una lettera minuscola",
+      "noDigit": "Deve contenere almeno una cifra",
+      "noSpecial": "Deve contenere almeno un carattere speciale (!@#$%...)",
+      "min8Chars": "Almeno 8 caratteri",
+      "hasUppercase": "Una lettera maiuscola",
+      "hasLowercase": "Una lettera minuscola",
+      "hasDigit": "Una cifra",
+      "hasSpecial": "Un carattere speciale (!@#$%...)",
+      "strength": {
+        "empty": "",
+        "veryWeak": "Molto debole",
+        "weak": "Debole",
+        "fair": "Discreta",
+        "good": "Buona",
+        "strong": "Forte"
+      }
+    },
+    "name": {
+      "required": "Il nome è obbligatorio",
+      "tooShort": "Il nome deve contenere almeno 2 caratteri",
+      "tooLong": "Il nome è troppo lungo"
+    },
+    "field": {
+      "required": "Questo campo è obbligatorio",
+      "tooShort": "Questo campo è troppo corto",
+      "tooLong": "Questo campo è troppo lungo",
+      "invalidUrl": "URL non valido (deve iniziare con https://)",
+      "notANumber": "Inserisci un numero valido",
+      "tooSmall": "L'importo deve essere maggiore di 0",
+      "tooLarge": "L'importo è troppo grande",
+      "descriptionTooShort": "La descrizione deve contenere almeno 20 caratteri"
+    }
+  },
+  "voiceInput": {
+    "startDictation": "Dettatura vocale",
+    "stopDictation": "Interrompi dettatura",
+    "hint": "Clicca sul microfono per dettare"
+  },
+  "chatbot": {
+    "title": "Assistente IA",
+    "subtitle": "Fai le tue domande",
+    "open": "Apri assistente",
+    "close": "Chiudi assistente",
+    "inputPlaceholder": "Scrivi o parla...",
+    "listeningPlaceholder": "Ti ascolto...",
+    "startListening": "Fai una domanda vocale",
+    "stopListening": "Smetti di ascoltare",
+    "muteTTS": "Disattiva voce",
+    "enableTTS": "Attiva voce",
+    "welcomeMessage": "Ciao! Sono il tuo assistente. Chiedimi di donazioni, casi sociali o della piattaforma.",
+    "errorNetwork": "Scusa, non posso rispondere ora. Riprova.",
+    "errorGeneric": "Si è verificato un errore.",
+    "suggestDonate": "Come donare?",
+    "suggestCreate": "Creare un caso sociale",
+    "suggestAccessibility": "Accessibilità",
+    "suggestCategories": "Quali categorie?"
   }
 }

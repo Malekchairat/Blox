@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AccessibilityMenu } from "@/components/AccessibilityMenu";
+import { NeurodivergentPanel } from "@/components/NeurodivergentPanel";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTheme } from "@/contexts/ThemeContext";
 import { trpc } from "@/lib/trpc";
@@ -90,6 +91,7 @@ export default function CaseDetail() {
           
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
+            <NeurodivergentPanel />
             <AccessibilityMenu />
             <Button
               variant="outline"

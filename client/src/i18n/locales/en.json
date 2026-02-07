@@ -75,7 +75,7 @@
     "association": "Association",
     "donorHelp": "You can support social cases",
     "associationHelp": "You can publish social cases",
-    "minChars": "Minimum 6 characters",
+    "minChars": "Minimum 8 characters",
     "registerButton": "Create my account",
     "registering": "Creating account...",
     "hasAccount": "Already have an account?",
@@ -84,7 +84,8 @@
     "errorServer": "Server connection error",
     "errorRegister": "Registration error",
     "passwordMismatch": "Passwords do not match",
-    "passwordTooShort": "Password must be at least 6 characters"
+    "passwordTooShort": "Password must be at least 8 characters",
+    "orContinueWith": "or continue with"
   },
   "caseDetail": {
     "notFoundTitle": "Social case not found",
@@ -246,5 +247,73 @@
     "cmdHealthCases": "View health cases",
     "cmdBiggerText": "Increase text size",
     "cmdReadPage": "Activate screen reader"
+  },
+  "validation": {
+    "email": {
+      "required": "Email is required",
+      "invalidFormat": "Invalid email format",
+      "tooLong": "Email is too long"
+    },
+    "password": {
+      "required": "Password is required",
+      "tooShort": "Password must be at least 8 characters",
+      "tooLong": "Password is too long",
+      "noUppercase": "Must contain at least one uppercase letter",
+      "noLowercase": "Must contain at least one lowercase letter",
+      "noDigit": "Must contain at least one digit",
+      "noSpecial": "Must contain at least one special character (!@#$%...)",
+      "min8Chars": "At least 8 characters",
+      "hasUppercase": "One uppercase letter",
+      "hasLowercase": "One lowercase letter",
+      "hasDigit": "One digit",
+      "hasSpecial": "One special character (!@#$%...)",
+      "strength": {
+        "empty": "",
+        "veryWeak": "Very weak",
+        "weak": "Weak",
+        "fair": "Fair",
+        "good": "Good",
+        "strong": "Strong"
+      }
+    },
+    "name": {
+      "required": "Name is required",
+      "tooShort": "Name must be at least 2 characters",
+      "tooLong": "Name is too long"
+    },
+    "field": {
+      "required": "This field is required",
+      "tooShort": "This field is too short",
+      "tooLong": "This field is too long",
+      "invalidUrl": "Invalid URL (must start with https://)",
+      "notANumber": "Please enter a valid number",
+      "tooSmall": "Amount must be greater than 0",
+      "tooLarge": "Amount is too large",
+      "descriptionTooShort": "Description must be at least 20 characters"
+    }
+  },
+  "voiceInput": {
+    "startDictation": "Dictate by voice",
+    "stopDictation": "Stop dictation",
+    "hint": "Click the microphone to dictate"
+  },
+  "chatbot": {
+    "title": "AI Assistant",
+    "subtitle": "Ask your questions",
+    "open": "Open assistant",
+    "close": "Close assistant",
+    "inputPlaceholder": "Type or speak...",
+    "listeningPlaceholder": "Listening...",
+    "startListening": "Ask a question by voice",
+    "stopListening": "Stop listening",
+    "muteTTS": "Mute voice",
+    "enableTTS": "Enable voice",
+    "welcomeMessage": "Hello! I'm your assistant. Ask me about donations, social cases, or the platform.",
+    "errorNetwork": "Sorry, I can't respond right now. Please try again.",
+    "errorGeneric": "An error occurred.",
+    "suggestDonate": "How to donate?",
+    "suggestCreate": "Create a social case",
+    "suggestAccessibility": "Accessibility",
+    "suggestCategories": "What categories?"
   }
 }

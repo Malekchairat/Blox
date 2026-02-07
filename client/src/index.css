@@ -171,10 +171,18 @@
   }
 
   /* Animations réduites */
-  .reduce-motion * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  .reduce-motion {
+    /* Apply to common page elements only, not to overlays/portals */
+    & h1, & h2, & h3, & h4, & h5, & h6,
+    & p, & span, & a, & img, & svg,
+    & div:not([data-radix-popper-content-wrapper]):not([data-radix-portal]),
+    & section, & article, & main, & nav, & footer, & header,
+    & ul, & ol, & li,
+    & input, & textarea, & select {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 
   /* Mode lecteur d'écran */
@@ -216,6 +224,176 @@
 }
 
 @layer components {
+  /* ───────────────────────────────────────────────────────────────────────
+     Neurodivergent / Sensory preference system
+     ─────────────────────────────────────────────────────────────────────── */
+
+  /* ── Calm colour palettes ── */
+  [data-calm-palette="calm-blue"] {
+    --primary: oklch(0.6 0.12 230);
+    --primary-foreground: oklch(1 0 0);
+    --secondary: oklch(0.7 0.08 230);
+    --secondary-foreground: oklch(0.2 0.02 230);
+    --accent: oklch(0.92 0.03 230);
+    --accent-foreground: oklch(0.3 0.08 230);
+    --destructive: oklch(0.6 0.14 20);
+  }
+  [data-calm-palette="calm-green"] {
+    --primary: oklch(0.58 0.1 155);
+    --primary-foreground: oklch(1 0 0);
+    --secondary: oklch(0.72 0.06 155);
+    --secondary-foreground: oklch(0.2 0.02 155);
+    --accent: oklch(0.93 0.03 155);
+    --accent-foreground: oklch(0.3 0.06 155);
+    --destructive: oklch(0.6 0.12 20);
+  }
+  [data-calm-palette="calm-warm"] {
+    --primary: oklch(0.62 0.1 60);
+    --primary-foreground: oklch(1 0 0);
+    --secondary: oklch(0.75 0.06 50);
+    --secondary-foreground: oklch(0.25 0.02 50);
+    --accent: oklch(0.94 0.03 50);
+    --accent-foreground: oklch(0.3 0.06 50);
+    --destructive: oklch(0.58 0.12 15);
+  }
+  [data-calm-palette="monochrome"] {
+    --primary: oklch(0.45 0 0);
+    --primary-foreground: oklch(1 0 0);
+    --secondary: oklch(0.7 0 0);
+    --secondary-foreground: oklch(0.15 0 0);
+    --accent: oklch(0.92 0 0);
+    --accent-foreground: oklch(0.25 0 0);
+    --destructive: oklch(0.45 0 0);
+    --destructive-foreground: oklch(1 0 0);
+    --ring: oklch(0.5 0 0);
+    --chart-1: oklch(0.7 0 0);
+    --chart-2: oklch(0.55 0 0);
+    --chart-3: oklch(0.4 0 0);
+    --chart-4: oklch(0.6 0 0);
+    --chart-5: oklch(0.5 0 0);
+  }
+
+  /* ── Sensory level: low ── */
+  [data-sensory="low"] {
+    --radius: 0.25rem;
+  }
+  [data-sensory="low"] main *,
+  [data-sensory="low"] header *,
+  [data-sensory="low"] footer *,
+  [data-sensory="low"] section *,
+  [data-sensory="low"] article * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  [data-sensory="low"] img:not([role="img"]),
+  [data-sensory="low"] svg.decorative {
+    opacity: 0.8;
+  }
+
+  /* ── Sensory level: minimal ── */
+  [data-sensory="minimal"] {
+    --radius: 0;
+  }
+  [data-sensory="minimal"] main *,
+  [data-sensory="minimal"] header *,
+  [data-sensory="minimal"] footer *,
+  [data-sensory="minimal"] section *,
+  [data-sensory="minimal"] article * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    border-radius: 0 !important;
+    background-image: none !important;
+  }
+
+  /* ── Content density ── */
+  [data-density="compact"] {
+    --density-scale: 0.75;
+  }
+  [data-density="comfortable"] {
+    --density-scale: 1;
+  }
+  [data-density="spacious"] {
+    --density-scale: 1.5;
+  }
+  [data-density="spacious"] .container {
+    max-width: 960px;
+  }
+  [data-density="spacious"] .gap-2 { gap: 0.75rem; }
+  [data-density="spacious"] .gap-3 { gap: 1.125rem; }
+  [data-density="spacious"] .gap-4 { gap: 1.5rem; }
+  [data-density="spacious"] .space-y-2 > * + * { margin-top: 0.75rem; }
+  [data-density="spacious"] .space-y-3 > * + * { margin-top: 1.125rem; }
+  [data-density="spacious"] .space-y-4 > * + * { margin-top: 1.5rem; }
+  [data-density="spacious"] p,
+  [data-density="spacious"] li {
+    line-height: 1.8;
+  }
+
+  /* ── Hide decorative elements ── */
+  .nd-hide-decorative main .decorative,
+  .nd-hide-decorative main img[role="presentation"],
+  .nd-hide-decorative main svg[role="presentation"] {
+    opacity: 0 !important;
+    pointer-events: none;
+  }
+
+  /* ── Reduced interactions — scoped to page content only ── */
+  .nd-reduced-interactions main *,
+  .nd-reduced-interactions header *,
+  .nd-reduced-interactions footer * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .nd-reduced-interactions main *:hover,
+  .nd-reduced-interactions header *:hover,
+  .nd-reduced-interactions footer *:hover {
+    transform: none !important;
+  }
+
+  /* ── Predictable layout ── */
+  .nd-predictable-layout [class*="carousel"],
+  .nd-predictable-layout [class*="slider"],
+  .nd-predictable-layout [class*="marquee"],
+  .nd-predictable-layout [data-auto-scroll] {
+    animation: none !important;
+    overflow: visible !important;
+  }
+  .nd-predictable-layout [data-auto-scroll] {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  /* ── Focus highlight ── */
+  .nd-focus-highlight main *:focus-visible,
+  .nd-focus-highlight header *:focus-visible,
+  .nd-focus-highlight footer *:focus-visible {
+    outline: 3px solid oklch(0.6 0.22 240) !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 0 6px oklch(0.6 0.22 240 / 0.2) !important;
+  }
+
+  /* ── Simplified UI — hide non-essential chrome ── */
+  .nd-simplified [data-decorative],
+  .nd-simplified footer .social-links,
+  .nd-simplified .promotional-banner,
+  .nd-simplified .cookie-banner {
+    display: none !important;
+  }
+
+  /* ── Dyslexia-friendly font ── */
+  .nd-dyslexia-font body {
+    font-family: "OpenDyslexic", "Comic Sans MS", sans-serif !important;
+    letter-spacing: 0.05em;
+    word-spacing: 0.15em;
+  }
+  .nd-dyslexia-font main *,
+  .nd-dyslexia-font header *,
+  .nd-dyslexia-font footer * {
+    font-family: inherit !important;
+  }
+
   /**
    * Custom container utility that centers content and adds responsive padding.
    *

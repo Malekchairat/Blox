@@ -3,12 +3,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Heart, Loader2, Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { Heart, Loader2, Eye, EyeOff, AlertCircle, CheckCircle2 } from "lucide-react";
+import { useState, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { VoiceInputButton } from "@/components/VoiceInputButton";
+import { GoogleAuthButton } from "@/components/GoogleAuthButton";
+import { validateEmail, validatePassword, validateName, getPasswordStrength } from "@/lib/validation";
 
 export default function Register() {
   const { t } = useTranslation();
@@ -21,49 +24,81 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+
+  const pwStrength = useMemo(() => getPasswordStrength(password), [password]);
+
+  // Password requirements checklist
+  const pwChecks = useMemo(() => [
+    { key: "length", ok: password.length >= 8, label: t("validation.password.min8Chars") },
+    { key: "upper", ok: /[A-Z]/.test(password), label: t("validation.password.hasUppercase") },
+    { key: "lower", ok: /[a-z]/.test(password), label: t("validation.password.hasLowercase") },
+    { key: "digit", ok: /[0-9]/.test(password), label: t("validation.password.hasDigit") },
+    { key: "special", ok: /[^A-Za-z0-9]/.test(password), label: t("validation.password.hasSpecial") },
+  ], [password, t]);
+
+  const redirectToDashboard = (roleVal: string) => {
+    const path = roleVal === "admin" ? "/dashboard/admin"
+      : roleVal === "association" ? "/dashboard/association"
+      : "/dashboard/donor";
+    navigate(path);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    const errors: Record<string, string> = {};
 
-    if (password !== confirmPassword) {
-      setError(t("auth.passwordMismatch"));
-      return;
+    // Validate all fields
+    const nameErr = validateName(name);
+    if (nameErr) errors.name = t(`validation.name.${nameErr}`);
+
+    const emailErr = validateEmail(email);
+    if (emailErr) errors.email = t(`validation.email.${emailErr}`);
+
+    const pwErr = validatePassword(password);
+    if (pwErr) errors.password = t(`validation.password.${pwErr}`);
+
+    if (!confirmPassword) {
+      errors.confirmPassword = t("validation.password.required");
+    } else if (password !== confirmPassword) {
+      errors.confirmPassword = t("auth.passwordMismatch");
     }
 
-    if (password.length < 6) {
-      setError(t("auth.passwordTooShort"));
-      return;
-    }
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     setLoading(true);
-
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), password, role }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || t("auth.errorRegister"));
+        if (data.field) {
+          setFieldErrors({ [data.field]: data.error });
+        } else {
+          setError(data.error || t("auth.errorRegister"));
+        }
         return;
       }
 
-      // Refresh the auth state and redirect to role-specific dashboard
       await utils.auth.me.invalidate();
-      const dashboardPath = data.user?.role === "admin" ? "/dashboard/admin" 
-        : data.user?.role === "association" ? "/dashboard/association" 
-        : "/dashboard/donor";
-      navigate(dashboardPath);
+      redirectToDashboard(data.user?.role);
     } catch {
       setError(t("auth.errorServer"));
     } finally {
       setLoading(false);
     }
+  };
+
+  const clearFieldError = (field: string) => {
+    setFieldErrors((p) => ({ ...p, [field]: "" }));
   };
 
   return (
@@ -92,42 +127,72 @@ export default function Register() {
               {t("auth.registerSubtitle")}
             </CardDescription>
           </CardHeader>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             <CardContent className="space-y-4">
               {error && (
-                <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
-                  {error}
+                <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>{error}</span>
                 </div>
               )}
 
+              {/* Name */}
               <div className="space-y-2">
                 <Label htmlFor="name">{t("auth.fullName")}</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder={t("auth.namePlaceholder")}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  autoComplete="name"
-                  disabled={loading}
-                />
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder={t("auth.namePlaceholder")}
+                    value={name}
+                    onChange={(e) => { setName(e.target.value); clearFieldError("name"); }}
+                    required
+                    autoComplete="name"
+                    disabled={loading}
+                    className={`flex-1 ${fieldErrors.name ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                    aria-invalid={!!fieldErrors.name}
+                  />
+                  <VoiceInputButton
+                    onResult={(text) => setName(text)}
+                    disabled={loading}
+                  />
+                </div>
+                {fieldErrors.name && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> {fieldErrors.name}
+                  </p>
+                )}
               </div>
 
+              {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email">{t("auth.email")}</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder={t("auth.emailPlaceholder")}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                  disabled={loading}
-                />
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder={t("auth.emailPlaceholder")}
+                    value={email}
+                    onChange={(e) => { setEmail(e.target.value); clearFieldError("email"); }}
+                    required
+                    autoComplete="email"
+                    disabled={loading}
+                    className={`flex-1 ${fieldErrors.email ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                    aria-invalid={!!fieldErrors.email}
+                  />
+                  <VoiceInputButton
+                    onResult={(text) => setEmail(text.replace(/\s+/g, "").toLowerCase())}
+                    disabled={loading}
+                  />
+                </div>
+                {fieldErrors.email && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> {fieldErrors.email}
+                  </p>
+                )}
               </div>
 
+              {/* Role */}
               <div className="space-y-2">
                 <Label htmlFor="role">{t("auth.iAm")}</Label>
                 <Select value={role} onValueChange={setRole} disabled={loading}>
@@ -144,53 +209,107 @@ export default function Register() {
                 </p>
               </div>
 
+              {/* Password */}
               <div className="space-y-2">
                 <Label htmlFor="password">{t("auth.password")}</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                    autoComplete="new-password"
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => { setPassword(e.target.value); clearFieldError("password"); }}
+                      required
+                      minLength={8}
+                      autoComplete="new-password"
+                      disabled={loading}
+                      className={fieldErrors.password ? "border-destructive focus-visible:ring-destructive" : ""}
+                      aria-invalid={!!fieldErrors.password}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
+                  </div>
+                  <VoiceInputButton
+                    onResult={(text) => setPassword(text.replace(/\s+/g, ""))}
                     disabled={loading}
                   />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                    tabIndex={-1}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {t("auth.minChars")}
-                </p>
+                {fieldErrors.password && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> {fieldErrors.password}
+                  </p>
+                )}
+
+                {/* Password strength bar */}
+                {password && (
+                  <div className="space-y-2 pt-1">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden flex gap-0.5">
+                        {[0, 1, 2, 3].map((i) => (
+                          <div
+                            key={i}
+                            className={`flex-1 rounded-full transition-colors ${i < pwStrength.score ? pwStrength.color : "bg-muted"}`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs text-muted-foreground min-w-[4rem] text-right">
+                        {t(`validation.password.strength.${pwStrength.label}`)}
+                      </span>
+                    </div>
+
+                    {/* Requirements checklist */}
+                    <ul className="space-y-0.5">
+                      {pwChecks.map((c) => (
+                        <li key={c.key} className={`text-xs flex items-center gap-1.5 ${c.ok ? "text-green-600" : "text-muted-foreground"}`}>
+                          {c.ok ? <CheckCircle2 className="h-3 w-3" /> : <span className="h-3 w-3 rounded-full border inline-block" />}
+                          {c.label}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
 
+              {/* Confirm Password */}
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">{t("auth.confirmPassword")}</Label>
-                <Input
-                  id="confirmPassword"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  autoComplete="new-password"
-                  disabled={loading}
-                />
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="confirmPassword"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => { setConfirmPassword(e.target.value); clearFieldError("confirmPassword"); }}
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                    disabled={loading}
+                    className={`flex-1 ${fieldErrors.confirmPassword ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                    aria-invalid={!!fieldErrors.confirmPassword}
+                  />
+                  <VoiceInputButton
+                    onResult={(text) => setConfirmPassword(text.replace(/\s+/g, ""))}
+                    disabled={loading}
+                  />
+                </div>
+                {fieldErrors.confirmPassword && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> {fieldErrors.confirmPassword}
+                  </p>
+                )}
               </div>
             </CardContent>
 
@@ -205,6 +324,8 @@ export default function Register() {
                   t("auth.registerButton")
                 )}
               </Button>
+
+              <GoogleAuthButton mode="register" role={role} disabled={loading} />
 
               <p className="text-sm text-muted-foreground text-center">
                 {t("auth.hasAccount")}{" "}

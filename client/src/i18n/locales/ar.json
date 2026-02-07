@@ -75,7 +75,7 @@
     "association": "جمعية",
     "donorHelp": "يمكنك دعم الحالات الاجتماعية",
     "associationHelp": "يمكنك نشر الحالات الاجتماعية",
-    "minChars": "6 أحرف على الأقل",
+    "minChars": "8 أحرف على الأقل",
     "registerButton": "إنشاء حسابي",
     "registering": "جاري إنشاء الحساب...",
     "hasAccount": "لديك حساب بالفعل؟",
@@ -84,7 +84,8 @@
     "errorServer": "خطأ في الاتصال بالخادم",
     "errorRegister": "خطأ أثناء التسجيل",
     "passwordMismatch": "كلمات المرور غير متطابقة",
-    "passwordTooShort": "يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل"
+    "passwordTooShort": "يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل",
+    "orContinueWith": "أو المتابعة مع"
   },
   "caseDetail": {
     "notFoundTitle": "الحالة الاجتماعية غير موجودة",
@@ -246,5 +247,73 @@
     "cmdHealthCases": "عرض الحالات الصحية",
     "cmdBiggerText": "تكبير النص",
     "cmdReadPage": "تفعيل قارئ الشاشة"
+  },
+  "validation": {
+    "email": {
+      "required": "البريد الإلكتروني مطلوب",
+      "invalidFormat": "صيغة البريد الإلكتروني غير صالحة",
+      "tooLong": "البريد الإلكتروني طويل جداً"
+    },
+    "password": {
+      "required": "كلمة المرور مطلوبة",
+      "tooShort": "يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل",
+      "tooLong": "كلمة المرور طويلة جداً",
+      "noUppercase": "يجب أن تحتوي على حرف كبير واحد على الأقل",
+      "noLowercase": "يجب أن تحتوي على حرف صغير واحد على الأقل",
+      "noDigit": "يجب أن تحتوي على رقم واحد على الأقل",
+      "noSpecial": "يجب أن تحتوي على رمز خاص واحد على الأقل (!@#$%...)",
+      "min8Chars": "8 أحرف على الأقل",
+      "hasUppercase": "حرف كبير واحد",
+      "hasLowercase": "حرف صغير واحد",
+      "hasDigit": "رقم واحد",
+      "hasSpecial": "رمز خاص واحد (!@#$%...)",
+      "strength": {
+        "empty": "",
+        "veryWeak": "ضعيف جداً",
+        "weak": "ضعيف",
+        "fair": "متوسط",
+        "good": "جيد",
+        "strong": "قوي"
+      }
+    },
+    "name": {
+      "required": "الاسم مطلوب",
+      "tooShort": "يجب أن يحتوي الاسم على حرفين على الأقل",
+      "tooLong": "الاسم طويل جداً"
+    },
+    "field": {
+      "required": "هذا الحقل مطلوب",
+      "tooShort": "هذا الحقل قصير جداً",
+      "tooLong": "هذا الحقل طويل جداً",
+      "invalidUrl": "رابط غير صالح (يجب أن يبدأ بـ https://)",
+      "notANumber": "يرجى إدخال رقم صالح",
+      "tooSmall": "يجب أن يكون المبلغ أكبر من 0",
+      "tooLarge": "المبلغ كبير جداً",
+      "descriptionTooShort": "يجب أن يحتوي الوصف على 20 حرفاً على الأقل"
+    }
+  },
+  "voiceInput": {
+    "startDictation": "إملاء بالصوت",
+    "stopDictation": "إيقاف الإملاء",
+    "hint": "انقر على الميكروفون للإملاء"
+  },
+  "chatbot": {
+    "title": "المساعد الذكي",
+    "subtitle": "اطرح أسئلتك",
+    "open": "فتح المساعد",
+    "close": "إغلاق المساعد",
+    "inputPlaceholder": "اكتب أو تحدث...",
+    "listeningPlaceholder": "أستمع إليك...",
+    "startListening": "اطرح سؤالاً صوتياً",
+    "stopListening": "إيقاف الاستماع",
+    "muteTTS": "كتم الصوت",
+    "enableTTS": "تفعيل الصوت",
+    "welcomeMessage": "مرحباً! أنا مساعدك. اسألني عن التبرعات أو الحالات الاجتماعية أو المنصة.",
+    "errorNetwork": "عذراً، لا أستطيع الرد الآن. حاول مرة أخرى.",
+    "errorGeneric": "حدث خطأ.",
+    "suggestDonate": "كيف أتبرع؟",
+    "suggestCreate": "إنشاء حالة اجتماعية",
+    "suggestAccessibility": "إمكانية الوصول",
+    "suggestCategories": "ما هي الفئات؟"
   }
 }

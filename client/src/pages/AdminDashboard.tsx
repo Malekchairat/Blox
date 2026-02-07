@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AccessibilityMenu } from "@/components/AccessibilityMenu";
+import { NeurodivergentPanel } from "@/components/NeurodivergentPanel";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTheme } from "@/contexts/ThemeContext";
 import { trpc } from "@/lib/trpc";
@@ -94,6 +95,7 @@ export default function AdminDashboard() {
           </div>
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
+            <NeurodivergentPanel />
             <AccessibilityMenu />
             <Button variant="outline" size="icon" onClick={toggleTheme} aria-label={t("common.toggleTheme")}>
               {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
@@ -230,40 +232,43 @@ export default function AdminDashboard() {
             <CardContent>
               {!allUsers ? (
                 <p className="text-muted-foreground">{t("common.loading")}</p>
-              ) : allUsers.length === 0 ? (
-                <p className="text-muted-foreground text-center py-6">{t("admin.noUsers")}</p>
               ) : (
-                <div className="space-y-3">
-                  {allUsers.map(u => (
-                    <div key={u.id} className="flex items-center justify-between p-3 border rounded-lg gap-4">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                          <span className="text-sm font-medium text-primary">
-                            {u.name?.charAt(0).toUpperCase() || "?"}
-                          </span>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-muted-foreground">
+                      {allUsers.length} {t("admin.users")}
+                    </p>
+                    <Button asChild>
+                      <Link href="/dashboard/admin/users">
+                        {t("admin.manageUsers", "Gérer les utilisateurs")}
+                      </Link>
+                    </Button>
+                  </div>
+                  <div className="space-y-3">
+                    {allUsers.slice(0, 5).map(u => (
+                      <div key={u.id} className="flex items-center justify-between p-3 border rounded-lg gap-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <span className="text-sm font-medium text-primary">
+                              {u.name?.charAt(0).toUpperCase() || "?"}
+                            </span>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{u.name || t("common.noName")}</p>
+                            <p className="text-sm text-muted-foreground truncate">{u.email}</p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="font-medium truncate">{u.name || t("common.noName")}</p>
-                          <p className="text-sm text-muted-foreground truncate">{u.email}</p>
+                        <div className="flex items-center gap-3 shrink-0">
+                          {getRoleBadge(u.role)}
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        {getRoleBadge(u.role)}
-                        {u.id !== user?.id && (
-                          <select
-                            className="text-sm border rounded px-2 py-1 bg-background"
-                            value={u.role}
-                            onChange={(e) => handleRoleChange(u.id, e.target.value as any)}
-                            disabled={updateRoleMutation.isPending}
-                          >
-                            <option value="donor">{t("roles.donor")}</option>
-                            <option value="association">{t("roles.association")}</option>
-                            <option value="admin">{t("roles.admin")}</option>
-                          </select>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                    {allUsers.length > 5 && (
+                      <p className="text-sm text-muted-foreground text-center">
+                        +{allUsers.length - 5} {t("admin.moreUsers", "autres utilisateurs")}
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
             </CardContent>

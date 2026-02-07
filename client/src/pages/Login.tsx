@@ -2,12 +2,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Heart, Loader2, Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { Heart, Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { VoiceInputButton } from "@/components/VoiceInputButton";
+import { GoogleAuthButton } from "@/components/GoogleAuthButton";
+import { validateEmail } from "@/lib/validation";
 
 export default function Login() {
   const { t } = useTranslation();
@@ -17,33 +20,61 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+
+  const redirectToDashboard = (role: string) => {
+    const path = role === "admin" ? "/dashboard/admin"
+      : role === "association" ? "/dashboard/association"
+      : "/dashboard/donor";
+    navigate(path);
+  };
+
+  // Check for error from Google OAuth redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlError = params.get("error");
+    if (urlError) {
+      setError(urlError);
+      // Clean up URL
+      window.history.replaceState({}, "", "/login");
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
+    const errors: Record<string, string> = {};
 
+    // Client-side validation
+    const emailErr = validateEmail(email);
+    if (emailErr) errors.email = t(`validation.email.${emailErr}`);
+    if (!password) errors.password = t("validation.password.required");
+
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    setLoading(true);
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || t("auth.errorConnection"));
+        if (data.field) {
+          setFieldErrors({ [data.field]: data.error });
+        } else {
+          setError(data.error || t("auth.errorConnection"));
+        }
         return;
       }
 
-      // Refresh the auth state and redirect to role-specific dashboard
       await utils.auth.me.invalidate();
-      const dashboardPath = data.user?.role === "admin" ? "/dashboard/admin" 
-        : data.user?.role === "association" ? "/dashboard/association" 
-        : "/dashboard/donor";
-      navigate(dashboardPath);
+      redirectToDashboard(data.user?.role);
     } catch {
       setError(t("auth.errorServer"));
     } finally {
@@ -77,56 +108,83 @@ export default function Login() {
               {t("auth.loginSubtitle")}
             </CardDescription>
           </CardHeader>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             <CardContent className="space-y-4">
               {error && (
-                <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
-                  {error}
+                <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>{error}</span>
                 </div>
               )}
 
               <div className="space-y-2">
                 <Label htmlFor="email">{t("auth.email")}</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder={t("auth.emailPlaceholder")}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                  disabled={loading}
-                />
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder={t("auth.emailPlaceholder")}
+                    value={email}
+                    onChange={(e) => { setEmail(e.target.value); setFieldErrors((p) => ({ ...p, email: "" })); }}
+                    required
+                    autoComplete="email"
+                    disabled={loading}
+                    className={`flex-1 ${fieldErrors.email ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                    aria-invalid={!!fieldErrors.email}
+                  />
+                  <VoiceInputButton
+                    onResult={(text) => setEmail(text.replace(/\s+/g, "").toLowerCase())}
+                    disabled={loading}
+                  />
+                </div>
+                {fieldErrors.email && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> {fieldErrors.email}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="password">{t("auth.password")}</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    autoComplete="current-password"
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => { setPassword(e.target.value); setFieldErrors((p) => ({ ...p, password: "" })); }}
+                      required
+                      autoComplete="current-password"
+                      disabled={loading}
+                      className={fieldErrors.password ? "border-destructive focus-visible:ring-destructive" : ""}
+                      aria-invalid={!!fieldErrors.password}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
+                  </div>
+                  <VoiceInputButton
+                    onResult={(text) => setPassword(text.replace(/\s+/g, ""))}
                     disabled={loading}
                   />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                    tabIndex={-1}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </Button>
                 </div>
+                {fieldErrors.password && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> {fieldErrors.password}
+                  </p>
+                )}
               </div>
             </CardContent>
 
@@ -141,6 +199,8 @@ export default function Login() {
                   t("auth.loginButton")
                 )}
               </Button>
+
+              <GoogleAuthButton mode="login" disabled={loading} />
 
               <p className="text-sm text-muted-foreground text-center">
                 {t("auth.noAccount")}{" "}

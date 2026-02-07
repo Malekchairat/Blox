@@ -203,6 +203,81 @@ export async function getCasesByAssociation(associationId: number) {
   return result;
 }
 
+export async function getUserById(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select({
+    id: users.id,
+    name: users.name,
+    email: users.email,
+    role: users.role,
+    phone: users.phone,
+    bio: users.bio,
+    createdAt: users.createdAt,
+    lastSignedIn: users.lastSignedIn,
+  }).from(users).where(eq(users.id, userId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function adminCreateUser(data: {
+  name: string;
+  email: string;
+  role: "donor" | "association" | "admin";
+  phone?: string | null;
+  bio?: string | null;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { nanoid } = await import("nanoid");
+  const openId = `admin-created-${nanoid()}`;
+
+  const result = await db.insert(users).values({
+    openId,
+    name: data.name,
+    email: data.email,
+    role: data.role,
+    phone: data.phone ?? null,
+    bio: data.bio ?? null,
+    loginMethod: "admin-created",
+  }).returning({
+    id: users.id,
+    name: users.name,
+    email: users.email,
+    role: users.role,
+    createdAt: users.createdAt,
+  });
+  return result[0];
+}
+
+export async function adminUpdateUser(userId: number, data: {
+  name?: string;
+  email?: string;
+  role?: "donor" | "association" | "admin";
+  phone?: string | null;
+  bio?: string | null;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const updateData: Record<string, unknown> = { updatedAt: new Date() };
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.email !== undefined) updateData.email = data.email;
+  if (data.role !== undefined) updateData.role = data.role;
+  if (data.phone !== undefined) updateData.phone = data.phone;
+  if (data.bio !== undefined) updateData.bio = data.bio;
+
+  await db.update(users).set(updateData).where(eq(users.id, userId));
+}
+
+export async function adminDeleteUser(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(users).where(eq(users.id, userId));
+}
+
 // Favorites queries
 export async function getFavoritesByUser(userId: number) {
   const db = await getDb();

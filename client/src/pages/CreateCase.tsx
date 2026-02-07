@@ -7,14 +7,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AccessibilityMenu } from "@/components/AccessibilityMenu";
+import { NeurodivergentPanel } from "@/components/NeurodivergentPanel";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTheme } from "@/contexts/ThemeContext";
 import { trpc } from "@/lib/trpc";
-import { Heart, ArrowLeft, Moon, Sun, X } from "lucide-react";
+import { Heart, ArrowLeft, Moon, Sun, AlertCircle } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { validateTitle, validateDescription, validateUrl, validateAmount } from "@/lib/validation";
 
 export default function CreateCase() {
   const { t } = useTranslation();
@@ -31,6 +33,11 @@ export default function CreateCase() {
     targetAmount: "",
     isUrgent: false,
   });
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const clearFieldError = (field: string) => {
+    setFieldErrors((p) => ({ ...p, [field]: "" }));
+  };
 
   const createCaseMutation = trpc.cases.create.useMutation({
     onSuccess: () => {
@@ -44,8 +51,29 @@ export default function CreateCase() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const errors: Record<string, string> = {};
 
-    if (!formData.title || !formData.description || !formData.category || !formData.cha9a9aLink || !formData.targetAmount) {
+    const titleErr = validateTitle(formData.title);
+    if (titleErr) errors.title = t(`validation.field.${titleErr}`);
+
+    const descErr = validateDescription(formData.description);
+    if (descErr) errors.description = t(`validation.field.${descErr === "tooShort" ? "descriptionTooShort" : descErr}`);
+
+    if (!formData.category) errors.category = t("validation.field.required");
+
+    const linkErr = validateUrl(formData.cha9a9aLink);
+    if (linkErr) errors.cha9a9aLink = t(`validation.field.${linkErr}`);
+
+    const amountErr = validateAmount(formData.targetAmount);
+    if (amountErr) errors.targetAmount = t(`validation.field.${amountErr}`);
+
+    if (formData.coverImage) {
+      const imgErr = validateUrl(formData.coverImage);
+      if (imgErr) errors.coverImage = t(`validation.field.${imgErr}`);
+    }
+
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
       toast.error(t("createCase.fillRequired"));
       return;
     }
@@ -123,6 +151,7 @@ export default function CreateCase() {
           
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
+            <NeurodivergentPanel />
             <AccessibilityMenu />
             <Button
               variant="outline"
@@ -168,9 +197,16 @@ export default function CreateCase() {
                     id="title"
                     placeholder={t("createCase.titlePlaceholder")}
                     value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    onChange={(e) => { setFormData({ ...formData, title: e.target.value }); clearFieldError("title"); }}
                     required
+                    className={fieldErrors.title ? "border-destructive focus-visible:ring-destructive" : ""}
+                    aria-invalid={!!fieldErrors.title}
                   />
+                  {fieldErrors.title && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> {fieldErrors.title}
+                    </p>
+                  )}
                 </div>
 
                 {/* Description */}
@@ -183,12 +219,20 @@ export default function CreateCase() {
                     placeholder={t("createCase.descriptionPlaceholder")}
                     rows={8}
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e) => { setFormData({ ...formData, description: e.target.value }); clearFieldError("description"); }}
                     required
+                    className={fieldErrors.description ? "border-destructive focus-visible:ring-destructive" : ""}
+                    aria-invalid={!!fieldErrors.description}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    {t("createCase.descriptionHelp")}
-                  </p>
+                  {fieldErrors.description ? (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> {fieldErrors.description}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      {t("createCase.descriptionHelp")}
+                    </p>
+                  )}
                 </div>
 
                 {/* Category */}
@@ -196,9 +240,14 @@ export default function CreateCase() {
                   <Label htmlFor="category">
                     {t("createCase.category")} <span className="text-destructive">*</span>
                   </Label>
+                  {fieldErrors.category && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> {fieldErrors.category}
+                    </p>
+                  )}
                   <Select
                     value={formData.category}
-                    onValueChange={(value) => setFormData({ ...formData, category: value })}
+                    onValueChange={(value) => { setFormData({ ...formData, category: value }); clearFieldError("category"); }}
                     required
                   >
                     <SelectTrigger id="category">
@@ -222,12 +271,20 @@ export default function CreateCase() {
                     type="url"
                     placeholder="https://cha9a9a.tn/donate/..."
                     value={formData.cha9a9aLink}
-                    onChange={(e) => setFormData({ ...formData, cha9a9aLink: e.target.value })}
+                    onChange={(e) => { setFormData({ ...formData, cha9a9aLink: e.target.value }); clearFieldError("cha9a9aLink"); }}
                     required
+                    className={fieldErrors.cha9a9aLink ? "border-destructive focus-visible:ring-destructive" : ""}
+                    aria-invalid={!!fieldErrors.cha9a9aLink}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    {t("createCase.cha9a9aLinkHelp")}
-                  </p>
+                  {fieldErrors.cha9a9aLink ? (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> {fieldErrors.cha9a9aLink}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      {t("createCase.cha9a9aLinkHelp")}
+                    </p>
+                  )}
                 </div>
 
                 {/* Target Amount */}
@@ -238,12 +295,19 @@ export default function CreateCase() {
                   <Input
                     id="targetAmount"
                     type="number"
-                    min="0"
+                    min="1"
                     placeholder={t("createCase.targetAmountPlaceholder")}
                     value={formData.targetAmount}
-                    onChange={(e) => setFormData({ ...formData, targetAmount: e.target.value })}
+                    onChange={(e) => { setFormData({ ...formData, targetAmount: e.target.value }); clearFieldError("targetAmount"); }}
                     required
+                    className={fieldErrors.targetAmount ? "border-destructive focus-visible:ring-destructive" : ""}
+                    aria-invalid={!!fieldErrors.targetAmount}
                   />
+                  {fieldErrors.targetAmount && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> {fieldErrors.targetAmount}
+                    </p>
+                  )}
                 </div>
 
                 {/* Photos Upload */}
@@ -254,11 +318,19 @@ export default function CreateCase() {
                     type="url"
                     placeholder={t("createCase.coverImagePlaceholder")}
                     value={formData.coverImage}
-                    onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
+                    onChange={(e) => { setFormData({ ...formData, coverImage: e.target.value }); clearFieldError("coverImage"); }}
+                    className={fieldErrors.coverImage ? "border-destructive focus-visible:ring-destructive" : ""}
+                    aria-invalid={!!fieldErrors.coverImage}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    {t("createCase.coverImageHelp")}
-                  </p>
+                  {fieldErrors.coverImage ? (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> {fieldErrors.coverImage}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      {t("createCase.coverImageHelp")}
+                    </p>
+                  )}
                   {formData.coverImage && (
                     <div className="relative mt-2 inline-block">
                       <img

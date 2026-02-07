@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AccessibilityMenu } from "@/components/AccessibilityMenu";
+import { NeurodivergentPanel } from "@/components/NeurodivergentPanel";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTheme } from "@/contexts/ThemeContext";
 import { trpc } from "@/lib/trpc";
@@ -63,6 +64,7 @@ export default function Home() {
           
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
+            <NeurodivergentPanel />
             <AccessibilityMenu />
             <Button
               variant="outline"

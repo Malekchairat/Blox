@@ -75,7 +75,7 @@
     "association": "Dernek",
     "donorHelp": "Sosyal vakaları destekleyebilirsiniz",
     "associationHelp": "Sosyal vakaları yayınlayabilirsiniz",
-    "minChars": "En az 6 karakter",
+    "minChars": "En az 8 karakter",
     "registerButton": "Hesabımı oluştur",
     "registering": "Hesap oluşturuluyor...",
     "hasAccount": "Zaten hesabınız var mı?",
@@ -84,7 +84,8 @@
     "errorServer": "Sunucu bağlantı hatası",
     "errorRegister": "Kayıt hatası",
     "passwordMismatch": "Şifreler eşleşmiyor",
-    "passwordTooShort": "Şifre en az 6 karakter olmalıdır"
+    "passwordTooShort": "Şifre en az 8 karakter olmalıdır",
+    "orContinueWith": "veya şununla devam et"
   },
   "caseDetail": {
     "notFoundTitle": "Sosyal vaka bulunamadı",
@@ -246,5 +247,73 @@
     "cmdHealthCases": "Sağlık vakalarını göster",
     "cmdBiggerText": "Yazı boyutunu büyüt",
     "cmdReadPage": "Ekran okuyucuyu etkinleştir"
+  },
+  "validation": {
+    "email": {
+      "required": "E-posta gereklidir",
+      "invalidFormat": "Geçersiz e-posta formatı",
+      "tooLong": "E-posta çok uzun"
+    },
+    "password": {
+      "required": "Şifre gereklidir",
+      "tooShort": "Şifre en az 8 karakter olmalıdır",
+      "tooLong": "Şifre çok uzun",
+      "noUppercase": "En az bir büyük harf içermelidir",
+      "noLowercase": "En az bir küçük harf içermelidir",
+      "noDigit": "En az bir rakam içermelidir",
+      "noSpecial": "En az bir özel karakter içermelidir (!@#$%...)",
+      "min8Chars": "En az 8 karakter",
+      "hasUppercase": "Bir büyük harf",
+      "hasLowercase": "Bir küçük harf",
+      "hasDigit": "Bir rakam",
+      "hasSpecial": "Bir özel karakter (!@#$%...)",
+      "strength": {
+        "empty": "",
+        "veryWeak": "Çok zayıf",
+        "weak": "Zayıf",
+        "fair": "Orta",
+        "good": "İyi",
+        "strong": "Güçlü"
+      }
+    },
+    "name": {
+      "required": "Ad gereklidir",
+      "tooShort": "Ad en az 2 karakter olmalıdır",
+      "tooLong": "Ad çok uzun"
+    },
+    "field": {
+      "required": "Bu alan gereklidir",
+      "tooShort": "Bu alan çok kısa",
+      "tooLong": "Bu alan çok uzun",
+      "invalidUrl": "Geçersiz URL (https:// ile başlamalıdır)",
+      "notANumber": "Lütfen geçerli bir sayı girin",
+      "tooSmall": "Tutar 0'dan büyük olmalıdır",
+      "tooLarge": "Tutar çok yüksek",
+      "descriptionTooShort": "Açıklama en az 20 karakter olmalıdır"
+    }
+  },
+  "voiceInput": {
+    "startDictation": "Sesle dikte et",
+    "stopDictation": "Dikteyi durdur",
+    "hint": "Dikte etmek için mikrofona tıklayın"
+  },
+  "chatbot": {
+    "title": "Yapay Zeka Asistanı",
+    "subtitle": "Sorularınızı sorun",
+    "open": "Asistanı aç",
+    "close": "Asistanı kapat",
+    "inputPlaceholder": "Yazın veya konuşun...",
+    "listeningPlaceholder": "Dinliyorum...",
+    "startListening": "Sesle soru sorun",
+    "stopListening": "Dinlemeyi durdur",
+    "muteTTS": "Sesi kapat",
+    "enableTTS": "Sesi aç",
+    "welcomeMessage": "Merhaba! Ben asistanınızım. Bağışlar, sosyal vakalar veya platform hakkında sorular sorun.",
+    "errorNetwork": "Üzgünüm, şu anda yanıt veremiyorum. Lütfen tekrar deneyin.",
+    "errorGeneric": "Bir hata oluştu.",
+    "suggestDonate": "Nasıl bağış yapılır?",
+    "suggestCreate": "Sosyal vaka oluştur",
+    "suggestAccessibility": "Erişilebilirlik",
+    "suggestCategories": "Hangi kategoriler?"
   }
 }

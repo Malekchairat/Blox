@@ -75,7 +75,7 @@
     "association": "Verein",
     "donorHelp": "Du kannst Sozialfälle unterstützen",
     "associationHelp": "Du kannst Sozialfälle veröffentlichen",
-    "minChars": "Mindestens 6 Zeichen",
+    "minChars": "Mindestens 8 Zeichen",
     "registerButton": "Mein Konto erstellen",
     "registering": "Konto wird erstellt...",
     "hasAccount": "Bereits ein Konto?",
@@ -84,7 +84,8 @@
     "errorServer": "Serververbindungsfehler",
     "errorRegister": "Registrierungsfehler",
     "passwordMismatch": "Passwörter stimmen nicht überein",
-    "passwordTooShort": "Passwort muss mindestens 6 Zeichen lang sein"
+    "passwordTooShort": "Passwort muss mindestens 8 Zeichen lang sein",
+    "orContinueWith": "oder weiter mit"
   },
   "caseDetail": {
     "notFoundTitle": "Sozialfall nicht gefunden",
@@ -246,5 +247,73 @@
     "cmdHealthCases": "Gesundheitsfälle anzeigen",
     "cmdBiggerText": "Textgröße erhöhen",
     "cmdReadPage": "Bildschirmleser aktivieren"
+  },
+  "validation": {
+    "email": {
+      "required": "E-Mail ist erforderlich",
+      "invalidFormat": "Ungültiges E-Mail-Format",
+      "tooLong": "E-Mail ist zu lang"
+    },
+    "password": {
+      "required": "Passwort ist erforderlich",
+      "tooShort": "Das Passwort muss mindestens 8 Zeichen lang sein",
+      "tooLong": "Das Passwort ist zu lang",
+      "noUppercase": "Muss mindestens einen Großbuchstaben enthalten",
+      "noLowercase": "Muss mindestens einen Kleinbuchstaben enthalten",
+      "noDigit": "Muss mindestens eine Ziffer enthalten",
+      "noSpecial": "Muss mindestens ein Sonderzeichen enthalten (!@#$%...)",
+      "min8Chars": "Mindestens 8 Zeichen",
+      "hasUppercase": "Ein Großbuchstabe",
+      "hasLowercase": "Ein Kleinbuchstabe",
+      "hasDigit": "Eine Ziffer",
+      "hasSpecial": "Ein Sonderzeichen (!@#$%...)",
+      "strength": {
+        "empty": "",
+        "veryWeak": "Sehr schwach",
+        "weak": "Schwach",
+        "fair": "Mittel",
+        "good": "Gut",
+        "strong": "Stark"
+      }
+    },
+    "name": {
+      "required": "Name ist erforderlich",
+      "tooShort": "Der Name muss mindestens 2 Zeichen lang sein",
+      "tooLong": "Der Name ist zu lang"
+    },
+    "field": {
+      "required": "Dieses Feld ist erforderlich",
+      "tooShort": "Dieses Feld ist zu kurz",
+      "tooLong": "Dieses Feld ist zu lang",
+      "invalidUrl": "Ungültige URL (muss mit https:// beginnen)",
+      "notANumber": "Bitte geben Sie eine gültige Zahl ein",
+      "tooSmall": "Der Betrag muss größer als 0 sein",
+      "tooLarge": "Der Betrag ist zu hoch",
+      "descriptionTooShort": "Die Beschreibung muss mindestens 20 Zeichen lang sein"
+    }
+  },
+  "voiceInput": {
+    "startDictation": "Per Sprache diktieren",
+    "stopDictation": "Diktat stoppen",
+    "hint": "Klicken Sie auf das Mikrofon zum Diktieren"
+  },
+  "chatbot": {
+    "title": "KI-Assistent",
+    "subtitle": "Stellen Sie Ihre Fragen",
+    "open": "Assistent öffnen",
+    "close": "Assistent schließen",
+    "inputPlaceholder": "Tippen oder sprechen...",
+    "listeningPlaceholder": "Ich höre zu...",
+    "startListening": "Per Sprache fragen",
+    "stopListening": "Zuhören beenden",
+    "muteTTS": "Stimme stumm schalten",
+    "enableTTS": "Stimme aktivieren",
+    "welcomeMessage": "Hallo! Ich bin Ihr Assistent. Fragen Sie mich über Spenden, Sozialfälle oder die Plattform.",
+    "errorNetwork": "Entschuldigung, ich kann gerade nicht antworten. Bitte versuchen Sie es erneut.",
+    "errorGeneric": "Ein Fehler ist aufgetreten.",
+    "suggestDonate": "Wie kann ich spenden?",
+    "suggestCreate": "Sozialfall erstellen",
+    "suggestAccessibility": "Barrierefreiheit",
+    "suggestCategories": "Welche Kategorien?"
   }
 }
